@@ -1,28 +1,43 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Db } from 'mongodb';
 import { Snippet } from './schemas/snippet.schema';
 import { CreateSnippetDto } from './dto/create-snippet.dto';
 
 @Injectable()
 export class AppService {
-  constructor(@InjectModel(Snippet.name) private snippetModel: Model<Snippet>) {}
+  constructor(@Inject('DATABASE_CONNECTION') private db: Db) {}
 
   getHello(): string {
     return 'Hello World!';
   }
 
+  private generateId(length = 6): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  }
+
   async create(createSnippetDto: CreateSnippetDto): Promise<Snippet> {
-    const createdSnippet = new this.snippetModel(createSnippetDto);
-    return createdSnippet.save();
+    const newSnippet: Snippet = {
+      _id: this.generateId(),
+      ...createSnippetDto,
+      createdAt: new Date(),
+    };
+    await this.db.collection<Snippet>('snippets').insertOne(newSnippet);
+    return newSnippet;
   }
 
   async findAll(): Promise<Snippet[]> {
-    return this.snippetModel.find().exec();
+    return this.db.collection<Snippet>('snippets').find().toArray();
   }
 
   async findOne(id: string): Promise<Snippet> {
-    const snippet = await this.snippetModel.findById(id).exec();
+    const snippet = await this.db
+      .collection<Snippet>('snippets')
+      .findOne({ _id: id });
     if (!snippet) {
       throw new NotFoundException(`Snippet #${id} not found`);
     }
