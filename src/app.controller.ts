@@ -10,4 +10,16 @@ export class AppController {
   getHello() {
     return {};
   }
+
+  @Get('login')
+  @Render('login')
+  getLogin() {
+    return {};
+  }
+
+  @Get('register')
+  @Render('register')
+  register() {
+    return {};
+  }
 }

@@ -26,13 +26,17 @@ export class PlayService {
       const existingSnippet = await this.db.collection<Snippet>('play_snippets').findOne({ _id: id });
       
       // If snippet exists AND belongs to the current user
-      if (existingSnippet && existingSnippet.ownerId === userId && userId) {
+      if (existingSnippet && existingSnippet.owner === userId && userId) {
         const newVersion: SnippetVersion = {
           _id: this.generateId(),
           snippetId: id,
           code: existingSnippet.code, // Save previous code as version
-          createdAt: existingSnippet.updatedAt || existingSnippet.createdAt,
-          versionId: this.generateId(4)
+          versionId: this.generateId(4),
+          
+          // Steedos Standard Fields
+          owner: existingSnippet.owner,
+          created: existingSnippet.modified || existingSnippet.created,
+          created_by: existingSnippet.modified_by || existingSnippet.created_by,
         };
 
         // Save version
@@ -44,12 +48,13 @@ export class PlayService {
           {
             $set: {
               code: code,
-              updatedAt: now
+              modified: now,
+              modified_by: userId
             }
           }
         );
         
-        return { ...existingSnippet, code, updatedAt: now };
+        return { ...existingSnippet, code, modified: now, modified_by: userId };
       }
     }
 
@@ -57,9 +62,11 @@ export class PlayService {
     const newSnippet: Snippet = {
       _id: this.generateId(),
       code,
-      ownerId: userId,
-      createdAt: now,
-      updatedAt: now,
+      owner: userId,
+      created: now,
+      created_by: userId,
+      modified: now,
+      modified_by: userId
     };
     await this.db.collection<Snippet>('play_snippets').insertOne(newSnippet);
     return newSnippet;
@@ -68,7 +75,7 @@ export class PlayService {
   async getVersions(snippetId: string): Promise<SnippetVersion[]> {
     return this.db.collection<SnippetVersion>('play_snippet_versions')
       .find({ snippetId })
-      .sort({ createdAt: -1 })
+      .sort({ created: -1 })
       .toArray();
   }
 

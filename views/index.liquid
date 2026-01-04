@@ -33,7 +33,7 @@
 
     <header class="flex items-center justify-between px-6 py-3 border-b border-gray-700 bg-gray-800">
         <div class="flex items-center gap-2">
-            <svg class="w-6 h-6 text-sky-400" viewBox="0 0 24 24" fill="currentColor"><path d="M12.001 4.8c-3.2 0-5.2 1.6-6 4.8 1.2-1.6 2.6-2.2 4.2-1.8.913.228 1.565.89 2.288 1.624C13.666 10.618 15.027 12 18.001 12c3.2 0 5.2-1.6 6-4.8-1.2 1.6-2.6 2.2-4.2 1.8-.913-.228-1.565-.89-2.288-1.624C16.337 6.182 14.976 4.8 12.001 4.8zm-6 7.2c-3.2 0-5.2 1.6-6 4.8 1.2-1.6 2.6-2.2 4.2-1.8.913.228 1.565.89 2.288 1.624 1.177 1.194 2.538 2.576 5.512 2.576 3.2 0 5.2-1.6 6-4.8-1.2 1.6-2.6 2.2-4.2 1.8-.913-.228-1.565-.89-2.288-1.624C10.337 13.382 8.976 12 6.001 12z"/></svg>
+            <img src="/logo.svg" alt="Logo" class="w-6 h-6">
             <h1 class="font-bold text-lg tracking-tight">Page Builder <span class="text-xs font-normal text-gray-400 ml-1">(Liquid)</span></h1>
         </div>
         <div class="flex items-center gap-4">
@@ -80,7 +80,7 @@
 
             <!-- Auth UI -->
             <div id="authContainer" class="flex items-center gap-2 ml-2 border-l border-gray-700 pl-4">
-                <button id="signInBtn" class="text-gray-300 hover:text-white text-sm font-medium">Sign In</button>
+                <a href="/login" id="signInBtn" class="text-gray-300 hover:text-white text-sm font-medium">Sign In</a>
                 <div id="userProfile" class="hidden flex items-center gap-2">
                     <span id="userName" class="text-sm text-gray-300"></span>
                     <button id="signOutBtn" class="text-gray-400 hover:text-white text-xs">Sign Out</button>
@@ -88,35 +88,6 @@
             </div>
         </div>
     </header>
-
-    <!-- Auth Modal -->
-    <div id="authModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-        <div class="bg-gray-800 p-6 rounded-xl shadow-xl w-96 border border-gray-700">
-            <h2 id="authTitle" class="text-xl font-bold mb-4 text-white">Sign In</h2>
-            <form id="authForm" class="space-y-4">
-                <div id="nameField" class="hidden">
-                    <label class="block text-sm text-gray-400 mb-1">Name</label>
-                    <input type="text" name="name" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-sky-500">
-                </div>
-                <div>
-                    <label class="block text-sm text-gray-400 mb-1">Email</label>
-                    <input type="email" name="email" required class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-sky-500">
-                </div>
-                <div>
-                    <label class="block text-sm text-gray-400 mb-1">Password</label>
-                    <input type="password" name="password" required class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-sky-500">
-                </div>
-                <button type="submit" class="w-full bg-sky-600 hover:bg-sky-500 text-white py-2 rounded font-medium transition">Submit</button>
-            </form>
-            <div class="mt-4 text-center text-sm text-gray-400">
-                <span id="authSwitchText">Don't have an account?</span>
-                <button id="authSwitchBtn" class="text-sky-400 hover:underline ml-1">Sign Up</button>
-            </div>
-            <button id="closeAuthModal" class="absolute top-4 right-4 text-gray-400 hover:text-white">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-        </div>
-    </div>
 
     <!-- History Modal -->
     <div id="historyModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
@@ -398,7 +369,7 @@
                 <div class="bg-gray-700 p-3 rounded flex justify-between items-center hover:bg-gray-600 transition">
                     <div>
                         <div class="text-sm font-medium text-white">Version ${v.versionId}</div>
-                        <div class="text-xs text-gray-400">${new Date(v.createdAt).toLocaleString()}</div>
+                        <div class="text-xs text-gray-400">${new Date(v.created).toLocaleString()}</div>
                     </div>
                     <button onclick="restoreVersion('${v._id}')" class="bg-sky-600 hover:bg-sky-500 text-white px-3 py-1 rounded text-xs">
                         Restore
@@ -505,20 +476,12 @@
             }
         }
 
-        // 7. Auth Logic
-        const authModal = document.getElementById('authModal');
-        const authForm = document.getElementById('authForm');
-        const authTitle = document.getElementById('authTitle');
-        const nameField = document.getElementById('nameField');
-        const authSwitchText = document.getElementById('authSwitchText');
-        const authSwitchBtn = document.getElementById('authSwitchBtn');
+                // 7. Auth Logic
         const signInBtn = document.getElementById('signInBtn');
         const userProfile = document.getElementById('userProfile');
         const userName = document.getElementById('userName');
         const signOutBtn = document.getElementById('signOutBtn');
-        const closeAuthModal = document.getElementById('closeAuthModal');
 
-        let isSignUp = false;
         let currentUser = null;
 
         // Check Session
@@ -548,69 +511,6 @@
             }
         }
 
-        // Modal Controls
-        signInBtn.addEventListener('click', () => {
-            authModal.classList.remove('hidden');
-            authModal.classList.add('flex');
-        });
-
-        closeAuthModal.addEventListener('click', () => {
-            authModal.classList.add('hidden');
-            authModal.classList.remove('flex');
-        });
-
-        authSwitchBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            isSignUp = !isSignUp;
-            if (isSignUp) {
-                authTitle.textContent = 'Sign Up';
-                nameField.classList.remove('hidden');
-                authSwitchText.textContent = 'Already have an account?';
-                authSwitchBtn.textContent = 'Sign In';
-            } else {
-                authTitle.textContent = 'Sign In';
-                nameField.classList.add('hidden');
-                authSwitchText.textContent = "Don't have an account?";
-                authSwitchBtn.textContent = 'Sign Up';
-            }
-        });
-
-        // Form Submit
-        authForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(authForm);
-            const email = formData.get('email');
-            const password = formData.get('password');
-            const name = formData.get('name');
-
-            const endpoint = isSignUp ? '/api/auth/sign-up/email' : '/api/auth/sign-in/email';
-            const body = isSignUp ? { email, password, name } : { email, password };
-
-            try {
-                const res = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
-                });
-
-                if (res.ok) {
-                    const data = await res.json();
-                    // better-auth returns session/user on success
-                    currentUser = data.user || data; 
-                    await checkSession();
-                    authModal.classList.add('hidden');
-                    authModal.classList.remove('flex');
-                    authForm.reset();
-                } else {
-                    const err = await res.json();
-                    alert(err.message || 'Authentication failed');
-                }
-            } catch (e) {
-                console.error(e);
-                alert('An error occurred');
-            }
-        });
-
         // Sign Out
         signOutBtn.addEventListener('click', async () => {
             try {
@@ -621,6 +521,10 @@
                 console.error(e);
             }
         });
+    </script>
+</body>
+</html>
+
     </script>
 </body>
 </html>
