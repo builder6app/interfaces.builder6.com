@@ -81,11 +81,34 @@ export class ProjectController {
   }
 
   @Get(':projectId/:pageId')
-  async getPage(@Param('projectId') projectId: string, @Param('pageId') pageId: string, @Res() res: Response) {
+  async renderPage(@Req() req: Request, @Param('projectId') projectId: string, @Param('pageId') pageId: string, @Res() res: Response) {
+    const session = await this.authService.auth.api.getSession({
+      headers: new Headers(req.headers as any),
+    });
+
+    const page = await this.playService.findOne(pageId);
+    if (!page || page.projectId !== projectId) {
+      return res.redirect(`/projects/${projectId}`);
+    }
+
+    const html = this.playService.buildHtml(page);
+    return res.send(html);
+  }
+
+  @Get(':projectId/:pageId/edit')
+  async editPage(@Req() req: Request, @Param('projectId') projectId: string, @Param('pageId') pageId: string, @Res() res: Response) {
+    const session = await this.authService.auth.api.getSession({
+      headers: new Headers(req.headers as any),
+    });
+
     const page = await this.playService.findOne(pageId);
     if (!page) {
       return res.redirect(`/projects/${projectId}`);
     }
-    return res.render('index', { page, projectId });
+
+    const project = await this.projectService.findOne(projectId);
+    const pages = await this.playService.findAllByProject(projectId);
+
+    return res.render('index', { page, projectId, project, pages, user: session?.user });
   }
 }

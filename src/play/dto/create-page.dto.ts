@@ -3,4 +3,7 @@ export class CreatePageDto {
   id?: string; // Optional: ID of the page being edited
   projectId?: string;
   name?: string;
+  metaTitle?: string;
+  path?: string;
+  addToNavigation?: boolean;
 }

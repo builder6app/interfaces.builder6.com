@@ -4,6 +4,11 @@ export class Page {
   name?: string; // Optional name for the page
   code: string;
   
+  // Page Options
+  metaTitle?: string;
+  path?: string; // URL slug, e.g. 'sign-up'
+  addToNavigation?: boolean;
+
   // Steedos Standard Fields
   owner?: string;
   created: Date;

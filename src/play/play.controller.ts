@@ -43,7 +43,7 @@ export class PlayController {
   @Get('view/:id')
   async viewPage(@Param('id') id: string, @Res() res: Response) {
     const page = await this.playService.findOne(id);
-    const html = this.playService.buildHtml(page.code);
+    const html = this.playService.buildHtml(page);
     res.set('Content-Type', 'text/html');
     res.send(html);
   }

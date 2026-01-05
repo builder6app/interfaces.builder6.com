@@ -18,7 +18,7 @@ export class PlayService {
   }
 
   async save(createPageDto: CreatePageDto, userId?: string): Promise<Page> {
-    const { code, id, projectId, name } = createPageDto;
+    const { code, id, projectId, name, metaTitle, path, addToNavigation } = createPageDto;
     const now = new Date();
 
     // 1. Try to update existing page if ID is provided
@@ -49,6 +49,9 @@ export class PlayService {
           modified_by: userId
         };
         if (name) updateFields.name = name;
+        if (metaTitle !== undefined) updateFields.metaTitle = metaTitle;
+        if (path !== undefined) updateFields.path = path;
+        if (addToNavigation !== undefined) updateFields.addToNavigation = addToNavigation;
 
         await this.db.collection<Page>('play_pages').updateOne(
           { _id: id },
@@ -69,7 +72,10 @@ export class PlayService {
       modified: now,
       modified_by: userId,
       projectId: projectId,
-      name: name || 'Untitled Page'
+      name: name || 'Untitled Page',
+      metaTitle,
+      path,
+      addToNavigation
     };
     await this.db.collection<Page>('play_pages').insertOne(newPage);
     return newPage;
@@ -112,18 +118,24 @@ export class PlayService {
     await this.db.collection<Page>('play_pages').deleteOne({ _id: id });
   }
 
-  buildHtml(code: string): string {
+  buildHtml(page: Page): string {
+    const title = page.metaTitle || page.name || 'Untitled Page';
     return `
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title}</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-    ${code}
+    ${page.code}
 </body>
 </html>`;
+  }
+
+  async findByPath(projectId: string, path: string): Promise<Page | null> {
+    return this.db.collection<Page>('play_pages').findOne({ projectId, path });
   }
 }
