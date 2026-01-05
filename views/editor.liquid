@@ -157,7 +157,7 @@
             <div class="flex-1 overflow-y-auto px-4 pb-4 space-y-1">
                 {% for p in pages %}
                 <div class="group flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium transition-all {% if p._id == page._id %}bg-blue-600 text-white shadow-lg shadow-blue-900/20{% else %}text-gray-400 hover:bg-white/5 hover:text-white{% endif %}">
-                    <a href="/projects/{{ project._id }}/{{ p._id }}" class="flex-1 truncate flex items-center gap-2">
+                    <a href="/interfaces/{{ project._id }}/{{ p._id }}" class="flex-1 truncate flex items-center gap-2">
                         <span>{{ p.name | default: "Untitled Page" }}</span>
                         {% if p.homePage == p._id %}<span class="text-xs opacity-70" title="Home Page">🏠</span>{% endif %}
                     </a>
@@ -356,9 +356,9 @@
                 return window.PAGE.code;
             }
 
-            // 优先检查路径 ID (例如 /projects/123/456)
+            // 优先检查路径 ID (例如 /interfaces/123/456)
             const path = window.location.pathname;
-            const match = path.match(/^\/projects\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)$/);
+            const match = path.match(/^\/interfaces\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)$/);
             if (match) {
                 const projectId = match[1];
                 const pageId = match[2];
@@ -487,7 +487,7 @@
                 const displayNavigation = document.getElementById('settingsProjectDisplayNavigation').checked;
 
                 try {
-                    const response = await fetch(`/projects/${window.PROJECT_ID}`, {
+                    const response = await fetch(`/interfaces/${window.PROJECT_ID}`, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',
@@ -512,12 +512,12 @@
                 if (!confirm('Are you sure you want to delete this project? All pages inside it will be deleted.')) return;
                 
                 try {
-                    const response = await fetch(`/projects/${window.PROJECT_ID}`, {
+                    const response = await fetch(`/interfaces/${window.PROJECT_ID}`, {
                         method: 'DELETE'
                     });
                     
                     if (response.ok) {
-                        window.location.href = '/projects';
+                        window.location.href = '/interfaces';
                     } else {
                         alert('Failed to delete project');
                     }
@@ -583,7 +583,7 @@
                     // 2. 更新 URL
                     const projectId = window.PROJECT_ID || (window.PAGE && window.PAGE.projectId);
                     if (projectId) {
-                        const newPath = '/projects/' + projectId + '/' + data._id;
+                        const newPath = '/interfaces/' + projectId + '/' + data._id;
                         window.history.pushState(null, '', newPath);
                     }
                     
@@ -817,7 +817,7 @@
                 });
                 if (response.ok) {
                     const page = await response.json();
-                    window.location.href = '/projects/' + projectId + '/' + page._id;
+                    window.location.href = '/interfaces/' + projectId + '/' + page._id;
                 } else {
                     alert('Failed to create page');
                 }

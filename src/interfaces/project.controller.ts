@@ -4,7 +4,7 @@ import { ProjectService } from './project.service';
 import { AuthService } from '../auth/auth.service';
 import { PageService } from './page.service';
 
-@Controller('projects')
+@Controller('interfaces')
 export class ProjectController {
   constructor(
     private readonly projectService: ProjectService,
@@ -75,10 +75,10 @@ export class ProjectController {
     // Set as home page
     if (project._id && page._id) {
         await this.projectService.update(project._id, session.user.id, { homePage: page._id });
-        return res.redirect(`/projects/${project._id}/${page._id}`);
+        return res.redirect(`/interfaces/${project._id}/${page._id}`);
     }
     
-    return res.redirect('/projects');
+    return res.redirect('/interfaces');
   }
 
   @Get(':id')
@@ -98,12 +98,12 @@ export class ProjectController {
       // Ideally we should check project.homePage, but finding the first one is a good fallback
       const project = await this.projectService.findOne(id);
       const homePageId = project.homePage || pages[0]._id;
-      return res.redirect(`/projects/${id}/${homePageId}`);
+      return res.redirect(`/interfaces/${id}/${homePageId}`);
     }
 
     // Fallback if no pages exist (shouldn't happen with new create logic, but for old projects)
     const project = await this.projectService.findOne(id);
-    return res.render('projects/show', { project, pages, user: session.user });
+    return res.render('interfaces/show', { project, pages, user: session.user });
   }
 
   @Put(':id')
@@ -133,7 +133,7 @@ export class ProjectController {
   @Get(':id/settings')
   async settings(@Req() req: Request, @Param('id') id: string, @Res() res: Response) {
      // ... implementation if needed, but modal is in show.liquid
-     return res.redirect(`/projects/${id}`);
+     return res.redirect(`/interfaces/${id}`);
   }
 
   @Get(':projectId/:pageId')
@@ -144,7 +144,7 @@ export class ProjectController {
 
     const page = await this.PageService.findOne(pageId);
     if (!page) {
-      return res.redirect(`/projects/${projectId}`);
+      return res.redirect(`/interfaces/${projectId}`);
     }
 
     const project = await this.projectService.findOne(projectId);
