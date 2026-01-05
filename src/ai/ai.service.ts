@@ -35,7 +35,7 @@ export class AiService {
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessage },
       ],
-      model: 'gpt-4o',
+      model: process.env.OPENAI_MODEL || 'gpt-4o',
     });
 
     let content = completion.choices[0].message.content || '';
