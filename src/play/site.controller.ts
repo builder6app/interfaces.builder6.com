@@ -3,7 +3,7 @@ import { Response } from 'express';
 import { PlayService } from './play.service';
 import { ProjectService } from './project.service';
 
-@Controller('site')
+@Controller('app')
 export class SiteController {
   constructor(
     private readonly playService: PlayService,
@@ -40,9 +40,9 @@ export class SiteController {
 
     const pages = await this.playService.findAllByProject(project._id!);
     const navPages = pages.filter(p => p.addToNavigation);
+    const editUrl = `/projects/${project._id}/${page._id}`;
 
-    const html = this.playService.buildHtml(page, project, navPages);
-    return res.send(html);
+    return res.render('app', { page, project, navPages, editUrl });
   }
 
   @Get(':slug/p/:pageId')
@@ -60,9 +60,9 @@ export class SiteController {
 
     const pages = await this.playService.findAllByProject(project._id!);
     const navPages = pages.filter(p => p.addToNavigation);
+    const editUrl = `/projects/${project._id}/${page._id}`;
 
-    const html = this.playService.buildHtml(page, project, navPages);
-    return res.send(html);
+    return res.render('app', { page, project, navPages, editUrl });
   }
 
   @Get(':slug/:path')
@@ -80,8 +80,8 @@ export class SiteController {
 
     const pages = await this.playService.findAllByProject(project._id!);
     const navPages = pages.filter(p => p.addToNavigation);
+    const editUrl = `/projects/${project._id}/${page._id}`;
 
-    const html = this.playService.buildHtml(page, project, navPages);
-    return res.send(html);
+    return res.render('app', { page, project, navPages, editUrl });
   }
 }

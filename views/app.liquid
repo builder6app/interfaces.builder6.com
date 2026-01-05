@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page.metaTitle | default: page.name | default: 'Untitled Page' }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-black min-h-screen text-white">
+
+    {% assign projectSlug = project.slug | default: project._id %}
+    {% assign themeColor = project.themeColor | default: '#2563eb' %}
+
+    {% if project.displayNavigation and navPages.size > 0 %}
+        {% if project.navigationStyle == 'left' %}
+            <!-- Left Sidebar Navigation -->
+            <aside class="fixed top-0 left-0 bottom-0 w-64 bg-[#1c1c1e] border-r border-white/10 p-6 z-40 overflow-y-auto">
+                <a href="/app/{{ projectSlug }}" class="block text-white font-bold text-xl tracking-tight mb-8">{{ project.name }}</a>
+                <div class="space-y-1">
+                    {% for p in navPages %}
+                        {% assign href = p.path | prepend: '/' | prepend: projectSlug | prepend: '/app/' %}
+                        {% unless p.path %}
+                            {% assign href = p._id | prepend: '/' | prepend: projectSlug | prepend: '/app/' %}
+                        {% endunless %}
+                        
+                        {% if p._id == page._id %}
+                            <a href="{{ href }}" class="block px-4 py-2 rounded-lg text-sm font-medium transition-colors" style="background-color: {{ themeColor }}; color: white;">{{ p.name }}</a>
+                        {% else %}
+                            <a href="{{ href }}" class="block px-4 py-2 rounded-lg text-sm font-medium transition-colors text-gray-400 hover:bg-white/5 hover:text-white">{{ p.name }}</a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </aside>
+            
+            <!-- Content Wrapper for Left Sidebar -->
+            <div class="pl-64">
+                {{ page.code }}
+            </div>
+
+        {% else %}
+            <!-- Top Navigation -->
+            <nav class="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10 px-6 py-4">
+                <div class="max-w-7xl mx-auto flex items-center justify-between">
+                    <a href="/app/{{ projectSlug }}" class="text-white font-bold text-lg tracking-tight">{{ project.name }}</a>
+                    <div class="flex items-center gap-6 text-sm">
+                        {% for p in navPages %}
+                            {% assign href = p.path | prepend: '/' | prepend: projectSlug | prepend: '/app/' %}
+                            {% unless p.path %}
+                                {% assign href = p._id | prepend: '/' | prepend: projectSlug | prepend: '/app/' %}
+                            {% endunless %}
+
+                            {% if p._id == page._id %}
+                                <a href="{{ href }}" class="transition-colors font-medium" style="color: {{ themeColor }};">{{ p.name }}</a>
+                            {% else %}
+                                <a href="{{ href }}" class="transition-colors text-gray-400 hover:text-white">{{ p.name }}</a>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </nav>
+            <div class="h-16"></div> <!-- Spacer -->
+            
+            <!-- Content Wrapper for Top Nav -->
+            <div>
+                {{ page.code }}
+            </div>
+        {% endif %}
+    {% else %}
+        <!-- No Navigation -->
+        {{ page.code }}
+    {% endif %}
+
+    {% if editUrl %}
+        <a href="{{ editUrl }}" class="fixed bottom-6 right-6 z-50 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-full shadow-lg font-medium transition-all flex items-center gap-2 hover:scale-105 active:scale-95">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+            Edit Page
+        </a>
+    {% endif %}
+
+</body>
+</html>

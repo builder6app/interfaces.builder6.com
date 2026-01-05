@@ -122,6 +122,28 @@
                     </label>
                 </div>
 
+                <div class="mb-6 grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-400 text-sm font-medium mb-2">Navigation Style</label>
+                        <select id="editProjectNavigationStyle" name="navigationStyle" class="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors appearance-none">
+                            <option value="top" {% if project.navigationStyle == 'top' %}selected{% endif %}>Top Bar</option>
+                            <option value="left" {% if project.navigationStyle == 'left' %}selected{% endif %}>Left Sidebar</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm font-medium mb-2">Theme Color</label>
+                        <div class="flex items-center gap-2">
+                            <input type="color" id="editProjectThemeColor" name="themeColor" value="{{ project.themeColor | default: '#2563eb' }}" class="h-10 w-10 rounded cursor-pointer bg-transparent border-0 p-0">
+                            <input type="text" id="editProjectThemeColorText" value="{{ project.themeColor | default: '#2563eb' }}" class="flex-1 bg-black/50 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors uppercase" onchange="document.getElementById('editProjectThemeColor').value = this.value">
+                        </div>
+                        <script>
+                            document.getElementById('editProjectThemeColor').addEventListener('input', (e) => {
+                                document.getElementById('editProjectThemeColorText').value = e.target.value.toUpperCase();
+                            });
+                        </script>
+                    </div>
+                </div>
+
                 <div class="flex justify-end gap-3">
                     <button type="button" onclick="document.getElementById('editProjectModal').classList.add('hidden')" class="px-4 py-2 text-gray-400 hover:text-white transition-colors">Cancel</button>
                     <button type="button" onclick="updateProject()" class="bg-[#007AFF] hover:bg-[#0062cc] text-white px-6 py-2 rounded-lg font-medium transition-colors">Save Changes</button>
@@ -188,6 +210,8 @@
             const slug = document.getElementById('editProjectSlug').value;
             const homePage = document.getElementById('editProjectHomePage').value;
             const displayNavigation = document.getElementById('editProjectDisplayNavigation').checked;
+            const navigationStyle = document.getElementById('editProjectNavigationStyle').value;
+            const themeColor = document.getElementById('editProjectThemeColor').value;
             
             try {
                 const response = await fetch('/projects/{{ project._id }}', {
@@ -195,7 +219,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ name, slug, homePage, displayNavigation }),
+                    body: JSON.stringify({ name, slug, homePage, displayNavigation, navigationStyle, themeColor }),
                 });
                 
                 if (response.ok) {

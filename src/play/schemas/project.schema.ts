@@ -5,6 +5,8 @@ export class Project {
   slug?: string;
   homePage?: string;
   displayNavigation?: boolean;
+  navigationStyle?: 'top' | 'left';
+  themeColor?: string;
   
   // Steedos Standard Fields
   owner?: string;

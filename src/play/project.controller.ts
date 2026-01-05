@@ -75,7 +75,7 @@ export class ProjectController {
     // Set as home page
     if (project._id && page._id) {
         await this.projectService.update(project._id, session.user.id, { homePage: page._id });
-        return res.redirect(`/projects/${project._id}/${page._id}/edit`);
+        return res.redirect(`/projects/${project._id}/${page._id}`);
     }
     
     return res.redirect('/projects');
@@ -98,7 +98,7 @@ export class ProjectController {
       // Ideally we should check project.homePage, but finding the first one is a good fallback
       const project = await this.projectService.findOne(id);
       const homePageId = project.homePage || pages[0]._id;
-      return res.redirect(`/projects/${id}/${homePageId}/edit`);
+      return res.redirect(`/projects/${id}/${homePageId}`);
     }
 
     // Fallback if no pages exist (shouldn't happen with new create logic, but for old projects)
@@ -137,25 +137,6 @@ export class ProjectController {
   }
 
   @Get(':projectId/:pageId')
-  async renderPage(@Req() req: Request, @Param('projectId') projectId: string, @Param('pageId') pageId: string, @Res() res: Response) {
-    const session = await this.authService.auth.api.getSession({
-      headers: new Headers(req.headers as any),
-    });
-
-    const page = await this.playService.findOne(pageId);
-    if (!page || page.projectId !== projectId) {
-      return res.redirect(`/projects/${projectId}`);
-    }
-
-    const project = await this.projectService.findOne(projectId);
-    const pages = await this.playService.findAllByProject(projectId);
-    const navPages = pages.filter(p => p.addToNavigation);
-
-    const html = this.playService.buildHtml(page, project, navPages);
-    return res.send(html);
-  }
-
-  @Get(':projectId/:pageId/edit')
   async editPage(@Req() req: Request, @Param('projectId') projectId: string, @Param('pageId') pageId: string, @Res() res: Response) {
     const session = await this.authService.auth.api.getSession({
       headers: new Headers(req.headers as any),

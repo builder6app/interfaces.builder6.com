@@ -44,9 +44,7 @@ export class PlayController {
   async viewPage(@Param('id') id: string, @Res() res: Response) {
     const page = await this.playService.findOne(id);
     // For direct view, we don't have project context easily available or we don't want to show nav
-    const html = this.playService.buildHtml(page);
-    res.set('Content-Type', 'text/html');
-    res.send(html);
+    return res.render('app', { page });
   }
 
 
