@@ -14,18 +14,6 @@ export class PlayController {
     private readonly authService: AuthService
   ) {}
 
-  @Get('my-pages')
-  async myPages(@Req() req: Request, @Res() res: Response) {
-    const session = await this.authService.auth.api.getSession({
-      headers: new Headers(req.headers as any),
-    });
-    if (!session) {
-      return res.redirect('/login');
-    }
-    const pages = await this.playService.findAll(session.user.id);
-    return res.render('my-pages', { pages: pages, user: session.user });
-  }
-
   @Post('api/pages')
   async create(@Body() createPageDto: CreatePageDto, @Req() req: Request): Promise<Page> {
     const session = await this.authService.auth.api.getSession({
@@ -60,14 +48,7 @@ export class PlayController {
     res.send(html);
   }
 
-  @Get('pages/:pageId')
-  async getPage(@Param('pageId') id: string, @Res() res: Response) {
-    const page = await this.playService.findOne(id);
-    if (!page) {
-      return res.redirect('/');
-    }
-    return res.render('index', { page: page });
-  }
+
 
   @Delete('pages/:id')
   async delete(@Param('id') id: string, @Req() req: Request, @Res() res: Response) {

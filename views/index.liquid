@@ -209,13 +209,14 @@
                 return window.PAGE.code;
             }
 
-            // 优先检查路径 ID (例如 /pages/64f...)
+            // 优先检查路径 ID (例如 /projects/123/456)
             const path = window.location.pathname;
-            const match = path.match(/^\/pages\/([a-zA-Z0-9_-]+)$/);
+            const match = path.match(/^\/projects\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)$/);
             if (match) {
-                const id = match[1];
+                const projectId = match[1];
+                const pageId = match[2];
                 try {
-                    const response = await fetch(`/api/pages/${id}`);
+                    const response = await fetch(`/api/pages/${pageId}`);
                     if (response.ok) {
                         const data = await response.json();
                         currentPageId = data._id;
@@ -290,8 +291,11 @@
                     lastSavedCode = code;
 
                     // 2. 更新 URL
-                    const newUrl = window.location.origin + '/pages/' + data._id;
-                    window.history.pushState(null, '', '/pages/' + data._id);
+                    const projectId = window.PROJECT_ID || (window.PAGE && window.PAGE.projectId);
+                    if (projectId) {
+                        const newUrl = window.location.origin + '/projects/' + projectId + '/' + data._id;
+                        window.history.pushState(null, '', '/projects/' + projectId + '/' + data._id);
+                    }
                     
                     updateSaveButtonState();
                 } else {
