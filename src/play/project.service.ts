@@ -17,10 +17,12 @@ export class ProjectService {
 
   async create(userId: string, name: string, description?: string): Promise<Project> {
     const now = new Date();
+    const id = this.generateId();
     const project: Project = {
-      _id: this.generateId(),
+      _id: id,
       name,
       description,
+      slug: id.toLowerCase(),
       owner: userId,
       created: now,
       created_by: userId,
@@ -44,6 +46,10 @@ export class ProjectService {
       throw new NotFoundException(`Project #${id} not found`);
     }
     return project;
+  }
+
+  async findBySlug(slug: string): Promise<Project | null> {
+    return this.db.collection<Project>('play_projects').findOne({ slug });
   }
 
   async update(id: string, userId: string, updateData: Partial<Project>): Promise<Project> {

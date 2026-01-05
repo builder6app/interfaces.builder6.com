@@ -10,12 +10,24 @@ export class SiteController {
     private readonly projectService: ProjectService,
   ) {}
 
-  @Get(':projectId')
-  async getHome(@Param('projectId') projectId: string, @Res() res: Response) {
-    const project = await this.projectService.findOne(projectId);
+  private async resolveProject(slugOrId: string) {
+    let project = await this.projectService.findBySlug(slugOrId);
+    if (!project) {
+      try {
+        project = await this.projectService.findOne(slugOrId);
+      } catch (e) {
+        // Ignore
+      }
+    }
     if (!project) {
       throw new NotFoundException('Project not found');
     }
+    return project;
+  }
+
+  @Get(':slug')
+  async getHome(@Param('slug') slug: string, @Res() res: Response) {
+    const project = await this.resolveProject(slug);
 
     if (!project.homePage) {
       return res.status(404).send('This project does not have a home page set.');
@@ -26,47 +38,50 @@ export class SiteController {
       return res.status(404).send('Home page not found.');
     }
 
-    const html = this.playService.buildHtml(page);
+    const pages = await this.playService.findAllByProject(project._id!);
+    const navPages = pages.filter(p => p.addToNavigation);
+
+    const html = this.playService.buildHtml(page, project, navPages);
     return res.send(html);
   }
 
-  @Get(':projectId/p/:pageId')
+  @Get(':slug/p/:pageId')
   async getPageById(
-    @Param('projectId') projectId: string,
+    @Param('slug') slug: string,
     @Param('pageId') pageId: string,
     @Res() res: Response,
   ) {
-    const project = await this.projectService.findOne(projectId);
-    if (!project) {
-      throw new NotFoundException('Project not found');
-    }
+    const project = await this.resolveProject(slug);
 
     const page = await this.playService.findOne(pageId);
-    if (!page || page.projectId !== projectId) {
+    if (!page || page.projectId !== project._id) {
       throw new NotFoundException('Page not found');
     }
 
-    const html = this.playService.buildHtml(page);
+    const pages = await this.playService.findAllByProject(project._id!);
+    const navPages = pages.filter(p => p.addToNavigation);
+
+    const html = this.playService.buildHtml(page, project, navPages);
     return res.send(html);
   }
 
-  @Get(':projectId/:path')
+  @Get(':slug/:path')
   async getPage(
-    @Param('projectId') projectId: string,
+    @Param('slug') slug: string,
     @Param('path') path: string,
     @Res() res: Response,
   ) {
-    const project = await this.projectService.findOne(projectId);
-    if (!project) {
-      throw new NotFoundException('Project not found');
-    }
+    const project = await this.resolveProject(slug);
 
-    const page = await this.playService.findByPath(projectId, path);
+    const page = await this.playService.findByPath(project._id!, path);
     if (!page) {
       throw new NotFoundException('Page not found');
     }
 
-    const html = this.playService.buildHtml(page);
+    const pages = await this.playService.findAllByProject(project._id!);
+    const navPages = pages.filter(p => p.addToNavigation);
+
+    const html = this.playService.buildHtml(page, project, navPages);
     return res.send(html);
   }
 }

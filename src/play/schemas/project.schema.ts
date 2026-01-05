@@ -2,8 +2,9 @@ export class Project {
   _id?: string;
   name: string;
   description?: string;
-  subdomain?: string;
+  slug?: string;
   homePage?: string;
+  displayNavigation?: boolean;
   
   // Steedos Standard Fields
   owner?: string;
