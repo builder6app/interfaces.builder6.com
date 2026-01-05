@@ -97,6 +97,11 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </button>
 
+            <a href="/my-snippets" id="mySnippetsBtn" class="hidden bg-white/10 hover:bg-white/20 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 backdrop-blur-sm border border-white/5">
+                <span>My Snippets</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+            </a>
+
             <!-- Auth UI -->
             <div id="authContainer" class="flex items-center gap-2 ml-2 border-l border-white/10 pl-4">
                 <a href="/login" id="signInBtn" class="text-gray-300 hover:text-white text-sm font-medium transition-colors">Sign In</a>
@@ -126,6 +131,8 @@
             </div>
         </div>
     </div>
+
+
 
     <main id="mainContainer" class="flex-1 flex overflow-hidden flex-row">
         <div id="editorWrapper" class="w-1/2 border-r border-gray-700 flex flex-col">
@@ -541,10 +548,13 @@
                 signInBtn.classList.add('hidden');
                 userProfile.classList.remove('hidden');
                 userName.textContent = currentUser.name || currentUser.email;
+                const mySnippetsBtn = document.getElementById('mySnippetsBtn');
+                if (mySnippetsBtn) mySnippetsBtn.classList.remove('hidden');
             } else {
                 signInBtn.classList.remove('hidden');
                 userProfile.classList.add('hidden');
-                userName.textContent = '';
+                const mySnippetsBtn = document.getElementById('mySnippetsBtn');
+                if (mySnippetsBtn) mySnippetsBtn.classList.add('hidden');
             }
         }
 
@@ -558,9 +568,7 @@
                 console.error(e);
             }
         });
-    </script>
-</body>
-</html>
+
 
     </script>
 </body>

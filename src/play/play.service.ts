@@ -79,8 +79,9 @@ export class PlayService {
       .toArray();
   }
 
-  async findAll(): Promise<Snippet[]> {
-    return this.db.collection<Snippet>('play_snippets').find().toArray();
+  async findAll(userId?: string): Promise<Snippet[]> {
+    const query = userId ? { owner: userId } : {};
+    return this.db.collection<Snippet>('play_snippets').find(query).sort({ modified: -1 }).toArray();
   }
 
   async findOne(id: string): Promise<Snippet> {

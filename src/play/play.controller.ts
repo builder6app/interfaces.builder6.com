@@ -14,6 +14,18 @@ export class PlayController {
     private readonly authService: AuthService
   ) {}
 
+  @Get('my-snippets')
+  async mySnippets(@Req() req: Request, @Res() res: Response) {
+    const session = await this.authService.auth.api.getSession({
+      headers: new Headers(req.headers as any),
+    });
+    if (!session) {
+      return res.redirect('/login');
+    }
+    const snippets = await this.playService.findAll(session.user.id);
+    return res.render('my-snippets', { snippets, user: session.user });
+  }
+
   @Post('api/play/snippets')
   async create(@Body() createSnippetDto: CreateSnippetDto, @Req() req: Request): Promise<Snippet> {
     const session = await this.authService.auth.api.getSession({
@@ -23,8 +35,11 @@ export class PlayController {
   }
 
   @Get('api/play/snippets')
-  async findAll(): Promise<Snippet[]> {
-    return this.playService.findAll();
+  async findAll(@Req() req: Request): Promise<Snippet[]> {
+    const session = await this.authService.auth.api.getSession({
+        headers: new Headers(req.headers as any),
+    });
+    return this.playService.findAll(session?.user?.id);
   }
 
   @Get('api/play/snippets/:id')
@@ -50,3 +65,5 @@ export class PlayController {
     return res.render('index');
   }
 }
+
+
