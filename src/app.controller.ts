@@ -8,7 +8,7 @@ export class AppController {
 
   @Get()
   root(@Res() res: Response) {
-    return res.redirect('/projects');
+    return res.redirect('/interfaces');
   }
 
   @Get('editor')
