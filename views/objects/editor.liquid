@@ -291,6 +291,21 @@
                 </div>
             </div>
         </div>
+
+        <!-- Properties Panel (Right Sidebar) -->
+        <div id="propertiesPanel" class="w-80 md:w-96 bg-white border-l border-gray-200 flex-col transition-all duration-300 hidden">
+            <div class="p-4 border-b border-gray-200 bg-gray-50/50 backdrop-blur-sm flex justify-between items-center">
+                <h3 class="font-semibold text-gray-800 flex items-center gap-2">
+                    <i class="ri-settings-3-line"></i> Properties
+                </h3>
+                <button onclick="closePropertiesPanel()" class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                    <i class="ri-close-line text-lg"></i>
+                </button>
+            </div>
+            <div id="propertiesContent" class="flex-1 overflow-y-auto p-6 space-y-6">
+                <!-- Content injected dynamically -->
+            </div>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
@@ -455,12 +470,16 @@
             const isWide = field.is_wide || ['textarea', 'html', 'markdown', 'code', 'section'].includes(field.type);
             const colSpanClass = isWide ? 'col-span-2' : 'col-span-1';
 
+            // Check selection state (using global variable if defined)
+            const isSelected = (typeof currentSelectedFieldKey !== 'undefined') && (key === currentSelectedFieldKey);
+            const activeClass = isSelected ? 'ring-2 ring-blue-500 bg-blue-50/50 shadow-[0_0_0_4px_rgba(59,130,246,0.1)]' : '';
+
             if (field.type === 'section') {
                 return `
-                <div class="${colSpanClass} p-4 rounded-xl hover:bg-white hover:shadow-md group border border-transparent hover:border-blue-100 cursor-move transition-all duration-200 relative mt-4 group" data-id="${key}">
+                <div class="${colSpanClass} p-4 rounded-xl hover:bg-white hover:shadow-md group border border-transparent hover:border-blue-100 cursor-move transition-all duration-200 relative mt-4 group ${activeClass}" data-id="${key}" onclick="selectField(event, '${key}')">
                     <div class="flex justify-between items-end border-b-2 border-gray-100 pb-2">
                         <h3 class="text-xl font-bold text-gray-800 tracking-tight">${label}</h3>
-                         <button class="opacity-0 group-hover:opacity-100 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Delete" onclick="deleteField('${key}')">
+                         <button class="opacity-0 group-hover:opacity-100 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Delete" onclick="event.stopPropagation(); deleteField('${key}')">
                             <i class="ri-delete-bin-line text-sm"></i>
                         </button>
                     </div>
@@ -542,12 +561,12 @@
             }
 
             return `
-                <div class="${colSpanClass} field-item p-3 -mx-3 rounded-xl hover:bg-blue-50/30 group border border-transparent hover:border-blue-200/30 cursor-move transition-all duration-200 relative" data-id="${key}">
+                <div class="${colSpanClass} field-item p-3 -mx-3 rounded-xl hover:bg-blue-50/30 group border border-transparent hover:border-blue-200/30 cursor-move transition-all duration-200 relative ${activeClass}" data-id="${key}" onclick="selectField(event, '${key}')">
                     <div class="mb-1.5 flex justify-between items-center px-0.5">
                         <label class="block text-sm font-medium text-gray-600 tracking-tight flex items-center gap-1">
                             ${label} ${required}
                         </label>
-                         <button class="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-all" title="Delete" onclick="deleteField('${key}')">
+                         <button class="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-all" title="Delete" onclick="event.stopPropagation(); deleteField('${key}')">
                             <i class="ri-close-line text-sm"></i>
                         </button>
                     </div>
@@ -760,6 +779,279 @@
         const aiChatInput = document.getElementById('aiChatInput');
         const aiChatSend = document.getElementById('aiChatSend');
         const aiChatMessages = document.getElementById('aiChatMessages');
+
+        // Field Properties Logic
+        let currentSelectedFieldKey = null;
+        const aiChatSidebar = document.getElementById('aiChatSidebar');
+        const propertiesPanel = document.getElementById('propertiesPanel');
+        const propertiesContent = document.getElementById('propertiesContent');
+
+        function selectField(event, key) {
+            if (event) event.stopPropagation(); // Avoid triggering container clicks if any
+            
+            // Visual feedback
+            document.querySelectorAll('[data-id]').forEach(el => {
+                el.classList.remove('ring-2', 'ring-blue-500', 'bg-blue-50/50', 'shadow-[0_0_0_4px_rgba(59,130,246,0.1)]');
+            });
+            const selectedEl = document.querySelector(`[data-id="${key}"]`);
+            if (selectedEl) {
+                selectedEl.classList.add('ring-2', 'ring-blue-500', 'bg-blue-50/50', 'shadow-[0_0_0_4px_rgba(59,130,246,0.1)]');
+            }
+
+            // Show Panel
+            currentSelectedFieldKey = key;
+            if (aiChatSidebar) aiChatSidebar.classList.add('hidden');
+            if (aiChatSidebar) aiChatSidebar.classList.remove('flex');
+            if (propertiesPanel) propertiesPanel.classList.remove('hidden');
+            if (propertiesPanel) propertiesPanel.classList.add('flex');
+
+            renderPropertiesPanel(key);
+        }
+
+        function closePropertiesPanel() {
+            currentSelectedFieldKey = null;
+            // Clear selection visual
+             document.querySelectorAll('[data-id]').forEach(el => {
+                el.classList.remove('ring-2', 'ring-blue-500', 'bg-blue-50/50', 'shadow-[0_0_0_4px_rgba(59,130,246,0.1)]');
+            });
+
+            if (propertiesPanel) propertiesPanel.classList.add('hidden');
+            if (propertiesPanel) propertiesPanel.classList.remove('flex');
+            
+            // Show AI again ? Or just leave generic empty ? 
+             if (aiChatSidebar) aiChatSidebar.classList.remove('hidden');
+            if (aiChatSidebar) aiChatSidebar.classList.add('flex');
+        }
+
+        function renderPropertiesPanel(key) {
+            // console.log('Rendering properties for:', key);
+            const schema = editor.getValue();
+            let obj = {};
+            try {
+                obj = jsyaml.load(schema) || {};
+            } catch (e) {
+                console.error('YAML load error:', e);
+                propertiesContent.innerHTML = '<p class="text-red-500 text-center p-4">Error parsing YAML</p>';
+                return;
+            }
+
+            const fields = obj.fields || {};
+            let field = fields[key];
+            // console.log('Field data:', field);
+
+            if (!field) {
+                propertiesContent.innerHTML = '<p class="text-gray-400 text-center p-4">Field not found</p>';
+                return;
+            }
+            
+            // Ensure field is an object (handle case where field might be null/empty in YAML)
+            if (typeof field !== 'object') field = {};
+
+            // Helper to escape quotes for HTML attributes
+            const escapeAttr = (str) => {
+                if (str === undefined || str === null) return '';
+                return String(str).replace(/"/g, '&quot;');
+            };
+
+            // Generate Input Helper
+            const createInput = (label, propName, type = 'text', value = '', options = {}) => {
+                const safeValue = escapeAttr(value);
+                return `
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">${label}</label>
+                        <input type="${type}" 
+                            class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-300"
+                            value="${safeValue}"
+                            onchange="updateFieldProperty('${key}', '${propName}', this.value)"
+                            ${options.readonly ? 'readonly' : ''}
+                        >
+                    </div>
+                `;
+            };
+            
+            const createSelect = (label, propName, value = '', opts = []) => {
+                return `
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">${label}</label>
+                         <div class="relative">
+                            <select 
+                                class="w-full pl-3 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none cursor-pointer"
+                                onchange="updateFieldProperty('${key}', '${propName}', this.value)"
+                            >
+                                ${opts.map(o => `<option value="${o.value}" ${o.value === value ? 'selected' : ''}>${o.label}</option>`).join('')}
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                                <i class="ri-arrow-down-s-line"></i>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            };
+
+            const createCheckbox = (label, propName, checked) => {
+                return `
+                    <div class="flex items-center justify-between py-1">
+                        <label class="text-sm font-medium text-gray-700">${label}</label>
+                         <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" class="sr-only peer" ${checked ? 'checked' : ''} onchange="updateFieldProperty('${key}', '${propName}', this.checked)">
+                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+                `;
+            };
+            
+            const createTextarea = (label, propName, value = '') => {
+                 // For textarea content, we escape HTML entities to prevent breaking out of the tag
+                 const safeText = String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                 
+                 return `
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">${label}</label>
+                        <textarea 
+                            rows="3"
+                            class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-gray-300 resize-none"
+                            onchange="updateFieldProperty('${key}', '${propName}', this.value)"
+                        >${safeText}</textarea>
+                    </div>
+                 `;
+            };
+
+            let html = `
+                <div class="space-y-4">
+                    ${createInput('Field Name (API)', 'name_key', 'text', key)}
+                    ${createInput('Label', 'label', 'text', field.label)}
+                    ${createSelect('Type', 'type', field.type, [
+                        {value:'text', label:'Text'}, {value:'textarea', label:'Long Text'}, {value:'html', label:'Rich Text'},
+                        {value:'number', label:'Number'}, {value:'currency', label:'Currency'}, {value:'percent', label:'Percent'},
+                        {value:'date', label:'Date'}, {value:'datetime', label:'Date/Time'}, {value:'time', label:'Time'},
+                        {value:'boolean', label:'Checkbox'}, {value:'select', label:'Select'},
+                        {value:'lookup', label:'Lookup'}, {value:'master_detail', label:'Master-Detail'},
+                        {value:'formula', label:'Formula'}, {value:'autonumber', label:'Auto Number'}, {value:'summary', label:'Roll-Up Summary'},
+                        {value:'section', label:'Section'}
+                    ])}
+                </div>
+                
+                <hr class="border-gray-100">
+                
+                <div class="space-y-2">
+                    ${createCheckbox('Required', 'required', field.required)}
+                    ${createCheckbox('Read Only', 'readonly', field.readonly)}
+                    ${createCheckbox('Hidden', 'hidden', field.hidden)}
+                     ${createCheckbox('Searchable', 'searchable', field.searchable)}
+                </div>
+
+                <hr class="border-gray-100">
+
+                <div class="space-y-4">
+                     ${createTextarea('Description', 'description', field.description)}
+                     ${createTextarea('Help Text', 'inlineHelpText', field.inline_help_text)}
+                     ${createInput('Default Value', 'defaultValue', 'text', field.defaultValue)}
+                </div>
+            `;
+            
+             // Specific fields logic (e.g. Select options, Lookup reference)
+             if (field.type === 'select') {
+                 // Options might be array or string. Handle both for display.
+                 let optionsVal = field.options;
+                 if (Array.isArray(optionsVal)) {
+                     // Convert [{label, value}] or ["A", "B"] to string
+                     optionsVal = optionsVal.map(o => typeof o === 'object' ? `${o.label}:${o.value}` : o).join('\n');
+                 }
+                 
+                 html += `
+                    <hr class="border-gray-100">
+                    <div class="space-y-4">
+                         ${createTextarea('Options (one per line)', 'options', optionsVal)}
+                    </div>
+                 `;
+             }
+             
+             if (['lookup', 'master_detail'].includes(field.type)) {
+                 html += `
+                    <hr class="border-gray-100">
+                    <div class="space-y-4">
+                         ${createInput('Reference Object', 'reference_to', 'text', field.reference_to)}
+                    </div>
+                 `;
+             }
+             
+              if (field.type === 'formula') {
+                 html += `
+                    <hr class="border-gray-100">
+                    <div class="space-y-4">
+                         ${createTextarea('Formula Expression', 'formula', field.formula)}
+                    </div>
+                 `;
+             }
+
+            propertiesContent.innerHTML = html;
+        }
+
+        function updateFieldProperty(key, prop, value) {
+            const schema = editor.getValue();
+            try {
+                let obj = jsyaml.load(schema) || {};
+                if (!obj.fields || !obj.fields[key]) return;
+
+                // Handle Key Change (Rename)
+                if (prop === 'name_key') {
+                    if (value === key) return; // No change
+                    if (obj.fields[value]) {
+                        alert('Field Name must be unique!');
+                        return;
+                    }
+                    
+                    // Rename logic: recreate fields object maintaining order
+                    const newFields = {};
+                    for (const k in obj.fields) {
+                        if (k === key) {
+                            newFields[value] = obj.fields[key];
+                        } else {
+                            newFields[k] = obj.fields[k];
+                        }
+                    }
+                    obj.fields = newFields;
+                    
+                    // Update global tracking
+                    currentSelectedFieldKey = value;
+                    key = value; // update local var for subsequent calls if any, though function will exit and re-render expected
+                    
+                    // We need to re-render the panel because the attribute 'key' in input onchange handlers is now stale
+                    // But dumping yaml effectively refreshes everything if we update editor
+                } 
+                else {
+                    // Normal Property Update
+                     if (prop === 'options' && (typeof value === 'string' && value.includes('\n'))) {
+                         // Simple split for options if multiline
+                         // value = value.split('\n').map(s => s.trim()).filter(s => s);
+                         // Actually, keep as simple string or try to parse JSON? 
+                         // Steedos supports array of strings or array of {label, value}
+                         // Let's just save as is for now, YAML can handle multiline strings
+                     }
+                    
+                    obj.fields[key][prop] = value;
+                }
+
+                // Dump
+                const newYaml = jsyaml.dump(obj);
+                editor.setValue(newYaml);
+                
+                // If we renamed, we must refresh the properties panel so inputs trigger on new Key
+                if (prop === 'name_key') {
+                    renderPropertiesPanel(currentSelectedFieldKey);
+                    // Update selection visual is handled by updatePreview -> renderFields -> but we need to re-apply selection
+                    // Because renderFields completely wipes DOM
+                    setTimeout(() => {
+                         const newEl = document.querySelector(`[data-id="${currentSelectedFieldKey}"]`);
+                         if (newEl) newEl.click();
+                    }, 100);
+                }
+
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
 
         function addMessage(role, text) {
             const div = document.createElement('div');
