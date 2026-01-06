@@ -7,9 +7,10 @@ import { SiteController } from './site.controller';
 import { ProjectService } from './project.service';
 import { DatabaseModule } from '../database/database.module';
 import { AuthModule } from '../auth/auth.module';
+import { ObjectsModule } from '../objects/objects.module';
 
 @Module({
-  imports: [DatabaseModule, AuthModule],
+  imports: [DatabaseModule, AuthModule, ObjectsModule],
   controllers: [PageController, ProjectController, ProjectApiController, SiteController],
   providers: [PageService, ProjectService],
 })

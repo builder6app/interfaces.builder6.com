@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Render, Res, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Render, Res, NotFoundException, Query } from '@nestjs/common';
 import { Response } from 'express';
 import { ObjectsService } from './objects.service';
 import { Builder6Object } from './schemas/object.schema';
@@ -9,39 +9,42 @@ export class ObjectsController {
 
   @Get()
   @Render('objects/index')
-  async index() {
-    const objects = await this.objectsService.findAll('mock-user-id');
+  async index(@Query('projectId') projectId: string) {
+    const objects = await this.objectsService.findAll('mock-user-id', projectId);
     return {
       user: { name: 'Developer' },
       project: { name: 'Object Designer' },
-      objects
+      objects,
+      projectId // Pass for generating links
     };
   }
 
   @Get('new')
   @Render('objects/editor')
-  newObject() {
+  newObject(@Query('projectId') projectId: string) {
     return {
       user: { name: 'Developer' },
       project: { name: 'Object Designer' },
-      isNew: true
+      isNew: true,
+      projectId
     };
   }
 
   @Get(':id')
   @Render('objects/editor')
-  async editObject(@Param('id') id: string) {
+  async editObject(@Param('id') id: string, @Query('projectId') projectId: string) {
     // Avoid conflict with 'generate' or other static paths if they were under :id, but 'generate' is POST /objects/generate or similar. 
     // Wait, 'generate' is POST, but if I had GET 'generate' it would clash. 
     // It's fine since 'new' is specific.
-    if (id === 'new') return this.newObject();
+    if (id === 'new') return this.newObject(projectId);
     
     const obj = await this.objectsService.findOne(id);
     return {
       user: { name: 'Developer' },
       project: { name: 'Object Designer' },
       object: obj,
-      isNew: false
+      isNew: false,
+      projectId: projectId || obj.projectId
     };
   }
 

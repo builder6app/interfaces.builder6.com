@@ -23,12 +23,16 @@ export class ObjectsService {
     return this.aiService.generateObjectDefinition(prompt);
   }
 
-  async findAll(userId: string): Promise<Builder6Object[]> {
+  async findAll(userId: string, projectId?: string): Promise<Builder6Object[]> {
+    const query: any = {};
+    if (projectId) {
+      query.projectId = projectId;
+    }
     // For now, let's list all objects or just the ones owned by the user. 
     // Assuming we want to show all for this demo or restrict by owner if we had auth context consistently.
     // The previous code had userId passed in. I'll stick to that.
     return this.db.collection<Builder6Object>('builder6_objects')
-      .find({}) 
+      .find(query) 
       .sort({ modified: -1 })
       .toArray();
   }
@@ -46,6 +50,7 @@ export class ObjectsService {
     const id = this.generateId();
     const newObject: Builder6Object = {
       _id: id,
+      projectId: data.projectId,
       name: data.name || 'untitled',
       label: data.label || 'Untitled',
       description: data.description,

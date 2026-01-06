@@ -1,5 +1,6 @@
 export class Builder6Object {
   _id?: string;
+  projectId?: string; // Add this
   name: string;
   label: string;
   description?: string;

@@ -3,13 +3,15 @@ import { Request, Response } from 'express';
 import { ProjectService } from './project.service';
 import { AuthService } from '../auth/auth.service';
 import { PageService } from './page.service';
+import { ObjectsService } from '../objects/objects.service'; // Import ObjectsService
 
 @Controller('interfaces')
 export class ProjectController {
   constructor(
     private readonly projectService: ProjectService,
     private readonly authService: AuthService,
-    private readonly PageService: PageService
+    private readonly PageService: PageService,
+    private readonly objectsService: ObjectsService // Inject ObjectsService
   ) {}
 
   @Get()
@@ -35,18 +37,12 @@ export class ProjectController {
     
     // Find pages belonging to this project
     const pages = await this.PageService.findAllByProject(id);
+    // Find objects belonging to this project
+    const objects = await this.objectsService.findAll(session.user.id, id);
     
-    if (pages.length > 0) {
-      // Redirect to the first page (or home page if we can identify it, but first is fine for now)
-      // Ideally we should check project.homePage, but finding the first one is a good fallback
-      const project = await this.projectService.findOne(id);
-      const homePageId = project.homePage || pages[0]._id;
-      return res.redirect(`/interfaces/${id}/${homePageId}`);
-    }
-
     // Fallback if no pages exist (shouldn't happen with new create logic, but for old projects)
     const project = await this.projectService.findOne(id);
-    return res.render('interfaces/show', { project, pages, user: session.user });
+    return res.render('projects/show', { project, pages, objects, user: session.user });
   }
 
   @Get(':projectId/:pageId')
