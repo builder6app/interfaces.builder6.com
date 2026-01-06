@@ -221,35 +221,34 @@
                     </div>
 
                     <!-- Canvas Area -->
-                    <div class="flex-1 overflow-y-auto px-12 py-12 relative flex flex-col items-center justify-start bg-grid-pattern">
-                        <div id="designerCanvas" class="w-full max-w-3xl bg-white min-h-[600px] rounded-[24px] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] ring-1 ring-black/5 flex flex-col transition-all duration-300">
+                    <div class="flex-1 relative flex flex-col overflow-hidden bg-grid-pattern">
+                        <div id="designerCanvas" class="w-full h-full flex flex-col relative">
                             <!-- Header -->
-                            <div id="canvasHeader" class="border-b border-gray-100 px-8 py-6 flex items-center gap-4">
+                            <div id="canvasHeader" class="shrink-0 bg-white/80 backdrop-blur-md border-b border-gray-200/50 px-8 py-4 flex items-center gap-4 z-10">
                                 <!-- Header content generated dynamically -->
-                            <div class="w-12 h-12 rounded-xl bg-gray-100 animate-pulse"></div>
-                            <div class="space-y-2">
-                                <div class="h-6 w-32 bg-gray-100 rounded animate-pulse"></div>
-                                <div class="h-4 w-20 bg-gray-50 rounded animate-pulse"></div>
-                            </div>
+                                <div class="w-10 h-10 rounded-lg bg-gray-100 animate-pulse"></div>
+                                <div class="space-y-1.5">
+                                    <div class="h-5 w-32 bg-gray-100 rounded animate-pulse"></div>
+                                    <div class="h-3 w-20 bg-gray-50 rounded animate-pulse"></div>
+                                </div>
                             </div>
                             
                             <!-- Drop Zone -->
-                            <div id="formFields" class="flex-1 p-8 min-h-[300px] grid grid-cols-2 gap-x-8 gap-y-6 content-start">
-                                <!-- Fields go here -->
-                                <div class="col-span-2 flex flex-col items-center justify-center py-20 text-gray-300 gap-4 border-2 border-dashed border-gray-100 rounded-xl m-4">
-                                    <span class="material-icons text-4xl">add_circle_outline</span>
-                                    <span>Drag fields here to start designing</span>
+                            <div id="formFieldsContainer" class="flex-1 overflow-y-auto bg-gray-50/50">
+                                <div id="formFields" class="max-w-4xl mx-auto p-8 min-h-full grid grid-cols-2 gap-x-8 gap-y-6 content-start">
+                                    <!-- Fields go here -->
+                                    <div class="col-span-2 flex flex-col items-center justify-center py-20 text-gray-400 gap-4 border-2 border-dashed border-gray-200 rounded-xl m-4 bg-white/50">
+                                        <i class="ri-add-circle-line text-4xl"></i>
+                                        <span>Drag fields here to start designing</span>
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- Actions Footer -->
-                            <div class="p-6 border-t border-gray-50 flex justify-end gap-3 bg-gray-50/30 rounded-b-[24px] backdrop-blur-sm">
+                            <div class="shrink-0 p-4 border-t border-gray-200/50 flex justify-end gap-3 bg-white/80 backdrop-blur-md z-10">
                                 <div class="h-9 w-24 bg-gray-200 rounded-lg opacity-40"></div>
                                 <div class="h-9 w-24 bg-blue-100 rounded-lg opacity-40"></div>
                             </div>
-                        </div>
-                        <div class="mt-8 text-sm text-gray-400 font-medium">
-                            Designed for macOS & iOS
                         </div>
                     </div>
                  </div>
