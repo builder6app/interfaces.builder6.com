@@ -20,7 +20,7 @@
     {% render 'partials/notifications.liquid' %}
 
     <!-- Editor Toolbar -->
-    <div class="flex items-center justify-between px-6 py-2 border-b border-white/10 bg-[#1c1c1e] z-40">
+    <div class="flex items-center justify-between px-6 py-2 border-b border-white/10 bg-[#1c1c1e] z-40 relative">
         <div class="flex items-center gap-3">
              <a href="/app/{{ project.slug | default: project._id }}" class="flex items-center justify-center w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all border border-white/10 group" title="Back to Project">
                 <i class="ri-arrow-left-line text-lg group-hover:-translate-x-0.5 transition-transform"></i>
@@ -32,9 +32,22 @@
             </div>
         </div>
         
+        <!-- View Switcher (Centered) -->
+        <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
+            <div class="bg-black/20 p-1 rounded-lg flex items-center border border-white/5">
+                 <button id="viewBtnPreview" class="px-3 py-1 rounded-md text-sm font-medium bg-white/10 text-white shadow-sm transition-all flex items-center gap-1.5 focus:outline-none">
+                    <svg class="w-4 h-4 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                    Preview
+                 </button>
+                 <button id="viewBtnCode" class="px-3 py-1 rounded-md text-sm font-medium text-gray-400 hover:text-white transition-all flex items-center gap-1.5 focus:outline-none">
+                    <svg class="w-4 h-4 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                    Code
+                 </button>
+            </div>
+        </div>
+        
         <div class="flex items-center gap-4">
-            <button id="openNewTab" class="bg-white/10 hover:bg-white/20 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 backdrop-blur-sm border border-white/5" title="Open in new tab">
-                <span>View Live</span>
+            <button id="openNewTab" class="bg-white/10 hover:bg-white/20 text-white px-2 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 backdrop-blur-sm border border-white/5" title="Open in new tab">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
             </button>
 
@@ -43,11 +56,6 @@
             <button id="saveBtn" class="bg-[#007AFF] hover:bg-[#0062cc] text-white px-4 py-1.5 rounded-lg text-sm font-medium transition-all shadow-lg shadow-blue-900/20 hover:shadow-blue-900/40 flex items-center gap-2 transform active:scale-95">
                 <span>Save</span>
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
-            </button>
-
-            <button id="shareBtn" class="bg-white/10 hover:bg-white/20 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 backdrop-blur-sm border border-white/5">
-                <span>Share</span>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
             </button>
 
             <div class="h-6 w-px bg-white/10 mx-1"></div>
@@ -224,19 +232,27 @@
             </div>
         </div>
 
-        <div id="editorWrapper" class="flex-1 border-r border-gray-700 flex flex-col min-w-0">
-            <div id="editor-container" class="flex-1"></div>
-            <!-- Expand Sidebar Button -->
-            <button id="sidebarExpandBtn" class="absolute top-4 left-4 z-30 bg-[#1c1c1e] border border-white/10 text-white p-2 rounded-lg shadow-lg hidden hover:bg-white/10 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
-            </button>
-        </div>
+        <!-- Central Content Area -->
+        <div class="flex-1 flex flex-col min-w-0 relative">
+            <div class="flex-1 relative flex">
+                
+                <!-- Code Editor View -->
+                <div id="editorWrapper" class="hidden absolute inset-0 z-10 flex flex-col bg-[#1c1c1e]">
+                    <div id="editor-container" class="flex-1"></div>
+                </div>
 
-        <div id="previewWrapper" class="flex-1 bg-white relative min-w-0">
-            <div class="absolute inset-0 bg-white" id="preview-inner">
-                <iframe id="preview" class="w-full h-full border-none"></iframe>
+                <!-- Preview View (Default) -->
+                <div id="previewWrapper" class="absolute inset-0 z-0 bg-white min-w-0">
+                    <iframe id="preview" class="w-full h-full border-none"></iframe>
+                </div>
+
+                <!-- Expand Sidebar Button -->
+                <button id="sidebarExpandBtn" class="absolute top-4 left-4 z-30 bg-[#1c1c1e] border border-white/10 text-white p-2 rounded-lg shadow-lg hidden hover:bg-white/10 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                </button>
             </div>
         </div>
+
 
         <!-- AI Chat Sidebar -->
         <div id="aiChatSidebar" class="w-80 md:w-96 bg-[#1c1c1e] border-l border-white/10 flex-col transition-all duration-300 flex">
@@ -737,30 +753,6 @@
             }
         });
 
-        // 6. Share 按钮逻辑
-        document.getElementById('shareBtn').addEventListener('click', async () => {
-            if (!currentPageId || !window.PROJECT_ID) {
-                $notify('Please save the page first to share.', 'warning');
-                return;
-            }
-
-            const url = `${window.location.origin}/app/${window.PROJECT_ID}/${currentPageId}`;
-
-            try {
-                await navigator.clipboard.writeText(url);
-                const btn = document.getElementById('shareBtn');
-                const originalContent = btn.innerHTML;
-                btn.innerHTML = `<span>Copied!</span><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>`;
-                $notify('URL copied to clipboard!', 'success');
-                setTimeout(() => {
-                    btn.innerHTML = originalContent;
-                }, 2000);
-            } catch (err) {
-                console.error('Failed to copy: ', err);
-                $notify('Failed to copy URL to clipboard', 'error');
-            }
-        });
-
         // 7. History Logic
         const historyModal = document.getElementById('historyModal');
         const historyList = document.getElementById('historyList');
@@ -842,6 +834,39 @@
         const previewWrapper = document.getElementById('previewWrapper');
         const previewInner = document.getElementById('preview');
         const previewFrame = document.getElementById('preview');
+
+        // View Switcher Logic
+        const viewBtnPreview = document.getElementById('viewBtnPreview');
+        const viewBtnCode = document.getElementById('viewBtnCode');
+
+        function setView(view) {
+            if (view === 'preview') {
+                editorWrapper.classList.add('hidden');
+                previewWrapper.classList.remove('hidden');
+                
+                // Update Button Styles
+                viewBtnPreview.classList.remove('text-gray-400', 'hover:text-white');
+                viewBtnPreview.classList.add('bg-white/10', 'text-white', 'shadow-sm');
+                
+                viewBtnCode.classList.add('text-gray-400', 'hover:text-white');
+                viewBtnCode.classList.remove('bg-white/10', 'text-white', 'shadow-sm');
+                
+                updatePreview();
+            } else {
+                editorWrapper.classList.remove('hidden');
+                previewWrapper.classList.add('hidden');
+                
+                // Update Button Styles
+                viewBtnCode.classList.remove('text-gray-400', 'hover:text-white');
+                viewBtnCode.classList.add('bg-white/10', 'text-white', 'shadow-sm');
+                
+                viewBtnPreview.classList.add('text-gray-400', 'hover:text-white');
+                viewBtnPreview.classList.remove('bg-white/10', 'text-white', 'shadow-sm');
+            }
+        }
+
+        viewBtnPreview.addEventListener('click', () => setView('preview'));
+        viewBtnCode.addEventListener('click', () => setView('code'));
 
         document.getElementById('openNewTab').addEventListener('click', () => {
             // If we have a saved page, open the live URL
