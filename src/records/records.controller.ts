@@ -11,6 +11,7 @@ export class RecordsController {
   @Post(':objectName/findMany')
   @ApiOperation({ summary: 'Find multiple records' })
   @ApiParam({ name: 'objectName', description: 'The name of the object' })
+  @ApiBody({ type: FindManyDto })
   async findMany(
     @Param('objectName') objectName: string,
     @Body() body: FindManyDto,
@@ -21,6 +22,7 @@ export class RecordsController {
   @Post(':objectName/findUnique')
   @ApiOperation({ summary: 'Find a unique record' })
   @ApiParam({ name: 'objectName', description: 'The name of the object' })
+  @ApiBody({ type: FindUniqueDto })
   async findUnique(
     @Param('objectName') objectName: string,
     @Body() body: FindUniqueDto,
@@ -31,6 +33,7 @@ export class RecordsController {
   @Post(':objectName/create')
   @ApiOperation({ summary: 'Create a record' })
   @ApiParam({ name: 'objectName', description: 'The name of the object' })
+  @ApiBody({ type: CreateDto })
   async create(
     @Param('objectName') objectName: string,
     @Body() body: CreateDto,
@@ -41,6 +44,7 @@ export class RecordsController {
   @Post(':objectName/update')
   @ApiOperation({ summary: 'Update a record' })
   @ApiParam({ name: 'objectName', description: 'The name of the object' })
+  @ApiBody({ type: UpdateDto })
   async update(
     @Param('objectName') objectName: string,
     @Body() body: UpdateDto,
@@ -51,6 +55,7 @@ export class RecordsController {
   @Post(':objectName/delete')
   @ApiOperation({ summary: 'Delete a record' })
   @ApiParam({ name: 'objectName', description: 'The name of the object' })
+  @ApiBody({ type: DeleteDto })
   async delete(
     @Param('objectName') objectName: string,
     @Body() body: DeleteDto,
