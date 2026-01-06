@@ -5,7 +5,7 @@ import { AuthService } from '../auth/auth.service';
 import { PageService } from '../pages/page.service';
 import { ObjectsService } from '../objects/objects.service'; // Import ObjectsService
 
-@Controller('interfaces')
+@Controller('app')
 export class ProjectController {
   constructor(
     private readonly projectService: ProjectService,
@@ -53,7 +53,7 @@ export class ProjectController {
 
     const page = await this.PageService.findOne(pageId);
     if (!page) {
-      return res.redirect(`/interfaces/${projectId}`);
+      return res.redirect(`/app/${projectId}`);
     }
 
     const project = await this.projectService.findOne(projectId);

@@ -157,7 +157,7 @@
             <div class="flex-1 overflow-y-auto px-4 pb-4 space-y-1">
                 {% for p in pages %}
                 <div class="group flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium transition-all {% if p._id == page._id %}bg-blue-600 text-white shadow-lg shadow-blue-900/20{% else %}text-gray-400 hover:bg-white/5 hover:text-white{% endif %}">
-                    <a href="/interfaces/{{ project._id }}/{{ p._id }}" class="flex-1 truncate flex items-center gap-2">
+                    <a href="/app/{{ project._id }}/{{ p._id }}" class="flex-1 truncate flex items-center gap-2">
                         <span>{{ p.name | default: "Untitled Page" }}</span>
                         {% if p.homePage == p._id %}<span class="text-xs opacity-70" title="Home Page">🏠</span>{% endif %}
                     </a>
@@ -453,9 +453,9 @@
                 return window.PAGE.code;
             }
 
-            // 优先检查路径 ID (例如 /interfaces/123/456)
+            // 优先检查路径 ID (例如 /app/123/456)
             const path = window.location.pathname;
-            const match = path.match(/^\/interfaces\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)$/);
+            const match = path.match(/^\/app\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)$/);
             if (match) {
                 const projectId = match[1];
                 const pageId = match[2];
@@ -614,7 +614,7 @@
                     });
                     
                     if (response.ok) {
-                        window.location.href = '/interfaces';
+                        window.location.href = '/app';
                     } else {
                         alert('Failed to delete project');
                     }
@@ -680,7 +680,7 @@
                     // 2. 更新 URL
                     const projectId = window.PROJECT_ID || (window.PAGE && window.PAGE.projectId);
                     if (projectId) {
-                        const newPath = '/interfaces/' + projectId + '/' + data._id;
+                        const newPath = '/app/' + projectId + '/' + data._id;
                         window.history.pushState(null, '', newPath);
                     }
                     
@@ -804,7 +804,10 @@
         document.getElementById('openNewTab').addEventListener('click', () => {
             // If we have a saved page, open the live URL
             if (currentPageId && window.PROJECT_ID) {
-                const url = `/app/${window.PROJECT_ID}/${currentPageId}`;
+                // Prefer project slug if available, otherwise use ID
+                const projectIdentifier = window.PROJECT_SLUG || window.PROJECT_ID;
+                // Use the /p/ route to ensure we get the specific page by ID even if path changes
+                const url = `/site/${projectIdentifier}/p/${currentPageId}`;
                 
                 window.open(url, '_blank');
                 return;
@@ -898,7 +901,7 @@
                 });
                 if (response.ok) {
                     const page = await response.json();
-                    window.location.href = '/interfaces/' + projectId + '/' + page._id;
+                    window.location.href = '/app/' + projectId + '/' + page._id;
                 } else {
                     alert('Failed to create page');
                 }

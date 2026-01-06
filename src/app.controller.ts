@@ -7,15 +7,10 @@ export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get()
-  root(@Res() res: Response) {
-    return res.redirect('/interfaces');
+  index(@Res() res: Response) {
+    return res.redirect('/app');
   }
 
-  @Get('editor')
-  @Render('editor')
-  editor(@Query('projectId') projectId: string) {
-    return { projectId };
-  }
 
   @Get('login')
   @Render('login')

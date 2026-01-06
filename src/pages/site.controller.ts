@@ -3,7 +3,7 @@ import { Response } from 'express';
 import { PageService } from './page.service';
 import { ProjectService } from '../projects/project.service';
 
-@Controller('app')
+@Controller('site')
 export class SiteController {
   constructor(
     private readonly PageService: PageService,
@@ -40,7 +40,7 @@ export class SiteController {
 
     const pages = await this.PageService.findAllByProject(project._id!);
     const navPages = pages.filter(p => p.addToNavigation);
-    const editUrl = `/interfaces/${project._id}/${page._id}`;
+    const editUrl = `/app/${project._id}/${page._id}`;
 
     return res.render('app', { page, project, navPages, editUrl });
   }
@@ -60,7 +60,7 @@ export class SiteController {
 
     const pages = await this.PageService.findAllByProject(project._id!);
     const navPages = pages.filter(p => p.addToNavigation);
-    const editUrl = `/interfaces/${project._id}/${page._id}`;
+    const editUrl = `/app/${project._id}/${page._id}`;
 
     return res.render('app', { page, project, navPages, editUrl });
   }
@@ -94,7 +94,7 @@ export class SiteController {
 
     const pages = await this.PageService.findAllByProject(project._id!);
     const navPages = pages.filter(p => p.addToNavigation);
-    const editUrl = `/interfaces/${project._id}/${page._id}`;
+    const editUrl = `/app/${project._id}/${page._id}`;
 
     return res.render('app', { page, project, navPages, editUrl });
   }
