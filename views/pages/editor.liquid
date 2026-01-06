@@ -15,7 +15,7 @@
     <script>
         window.PROJECT_ID = "{{ projectId }}";
         window.PROJECT_SLUG = "{{ project.slug }}";
-        window.PAGE = {{ page | json | replace: '</', '<\\/' }};
+        window.PAGE = {{ page | json }};
     </script>
     
     {% render 'partials/notifications.liquid' %}
