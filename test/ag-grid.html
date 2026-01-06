@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steedos Airtable (Alpine.js + AG Grid)</title>
+
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@31.0.0/dist/ag-grid-community.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@31.0.0/styles/ag-grid.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@31.0.0/styles/ag-theme-alpine.css" />
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        /* [Airtable 风格化定制] */
+        .ag-theme-alpine {
+            --ag-font-family: 'Inter', system-ui, sans-serif;
+            --ag-font-size: 13px;
+            --ag-header-height: 40px;
+            --ag-row-height: 40px;
+            --ag-borders: solid 1px #e2e8f0;
+            --ag-header-background-color: #f8fafc;
+            --ag-row-hover-color: #f1f5f9;
+            --ag-selected-row-background-color: #e0f2fe;
+            --ag-cell-horizontal-padding: 12px;
+        }
+
+        /* 选中单元格的高亮框 (Airtable 蓝) */
+        .ag-theme-alpine .ag-ltr .ag-cell-focus:not(.ag-cell-range-selected) {
+            border: 2px solid #2563eb !important;
+            z-index: 10;
+        }
+        
+        /* 隐藏掉 focus 时的默认虚线 */
+        .ag-cell-focus { outline: none !important; }
+
+        /* 修复 Alpine x-cloak */
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body class="bg-slate-50 h-screen w-screen overflow-hidden text-slate-700">
+
+    <div x-data="steedosGrid()" class="flex flex-col h-full w-full">
+        
+        <div class="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 shrink-0 shadow-sm z-10">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white font-bold">S</div>
+                <div>
+                    <h1 class="font-bold text-slate-800 leading-tight">项目任务表</h1>
+                    <div class="text-xs text-slate-500">所有视图 (All Views)</div>
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <div class="relative">
+                    <input type="text" placeholder="搜索记录..." 
+                           @input.debounce.300ms="onQuickFilter($event.target.value)"
+                           class="pl-8 pr-3 py-1.5 text-sm border border-slate-300 rounded hover:border-blue-500 focus:outline-none focus:border-blue-500 transition w-64">
+                    <svg class="w-4 h-4 text-slate-400 absolute left-2.5 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+                <button @click="addNewRow()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm font-medium transition shadow-sm flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    新建
+                </button>
+            </div>
+        </div>
+
+        <div class="flex-1 w-full relative">
+            <div x-ref="gridContainer" class="ag-theme-alpine absolute inset-0"></div>
+        </div>
+
+        <div class="h-8 bg-white border-t border-slate-200 flex items-center px-4 text-xs text-slate-500 justify-between shrink-0">
+            <span x-text="`总计 ${recordCount} 条记录`"></span>
+            <span x-show="unsavedChanges > 0" class="text-orange-600 font-semibold" x-transition>
+                <span x-text="unsavedChanges"></span> 处更改未保存...
+            </span>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. 模拟 Steedos 元数据 & 数据
+        // ==========================================
+        const MOCK_USERS = {
+            "u1": { name: "孙悟空", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" },
+            "u2": { name: "猪八戒", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka" },
+            "u3": { name: "沙悟净", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Bob" }
+        };
+
+        const STEEDOS_FIELDS = [
+            { name: "name", label: "任务名称", type: "text", width: 240, pinned: 'left' },
+            { name: "priority", label: "优先级", type: "select", options: [
+                { label: "高", value: "high", color: "bg-red-100 text-red-700 border-red-200" },
+                { label: "中", value: "medium", color: "bg-yellow-100 text-yellow-700 border-yellow-200" },
+                { label: "低", value: "low", color: "bg-green-100 text-green-700 border-green-200" }
+            ]},
+            { name: "status", label: "状态", type: "select", options: [
+                { label: "未开始", value: "todo", color: "bg-slate-100 text-slate-600" },
+                { label: "进行中", value: "doing", color: "bg-blue-100 text-blue-700" },
+                { label: "已完成", value: "done", color: "bg-emerald-100 text-emerald-700" }
+            ]},
+            { name: "owner", label: "负责人", type: "lookup", reference_to: "users" },
+            { name: "due_date", label: "截止日期", type: "date" },
+            { name: "progress", label: "进度", type: "percent" },
+            { name: "is_billable", label: "计费", type: "boolean" }
+        ];
+
+        const INITIAL_DATA = [
+            { _id: "101", name: "设计 Steedos 移动端原型", priority: "high", status: "doing", owner: "u1", due_date: "2024-06-01", progress: 65, is_billable: true },
+            { _id: "102", name: "修复 AG Grid 滚动卡顿", priority: "medium", status: "todo", owner: "u2", due_date: "2024-06-05", progress: 0, is_billable: false },
+            { _id: "103", name: "Alpine.js 集成测试", priority: "low", status: "done", owner: "u3", due_date: "2024-05-20", progress: 100, is_billable: true },
+        ];
+
+        // ==========================================
+        // 2. AG Grid 自定义组件 (纯 JS 函数/类)
+        // ==========================================
+        
+        // Renderer: 带颜色的标签
+        function badgeRenderer(params) {
+            if (!params.value) return '';
+            // 查找字段定义的 options
+            const colId = params.colDef.field;
+            const fieldDef = STEEDOS_FIELDS.find(f => f.name === colId);
+            const option = fieldDef?.options?.find(o => o.value === params.value);
+            
+            if (option) {
+                return `<span class="px-2 py-0.5 rounded-md text-xs font-semibold border ${option.color}">${option.label}</span>`;
+            }
+            return params.value;
+        }
+
+        // Renderer: 用户头像
+        function userRenderer(params) {
+            const userId = params.value;
+            const user = MOCK_USERS[userId];
+            if (!user) return '<span class="text-slate-300 italic">未分配</span>';
+            return `
+                <div class="flex items-center gap-2 h-full">
+                    <img src="${user.avatar}" class="w-5 h-5 rounded-full bg-slate-200">
+                    <span class="truncate">${user.name}</span>
+                </div>
+            `;
+        }
+
+        // Editor: 简单的日期选择器 (Class 形式)
+        class DateEditor {
+            init(params) {
+                this.eInput = document.createElement('input');
+                this.eInput.type = 'date';
+                this.eInput.value = params.value;
+                this.eInput.className = "w-full h-full px-2 outline-none bg-white text-sm";
+            }
+            getGui() { return this.eInput; }
+            afterGuiAttached() { this.eInput.focus(); }
+            getValue() { return this.eInput.value; }
+        }
+
+        // ==========================================
+        // 3. Alpine.js 逻辑
+        // ==========================================
+        
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('steedosGrid', () => ({
+                gridApi: null,
+                recordCount: 0,
+                unsavedChanges: 0,
+
+                init() {
+                    // Alpine 初始化时挂载 AG Grid
+                    this.mountGrid();
+                },
+
+                mountGrid() {
+                    const gridDiv = this.$refs.gridContainer;
+                    
+                    // 将 Steedos 字段转为 AG Grid 列定义
+                    const columnDefs = STEEDOS_FIELDS.map(field => this.mapFieldToColumn(field));
+
+                    const gridOptions = {
+                        columnDefs: columnDefs,
+                        rowData: INITIAL_DATA,
+                        
+                        // 核心配置
+                        rowHeight: 40,
+                        headerHeight: 40,
+                        rowSelection: 'multiple',
+                        animateRows: true,
+                        
+                        // 编辑体验
+                        singleClickEdit: true, // 单击即编辑 (Airtable 风格)
+                        stopEditingWhenCellsLoseFocus: true,
+                        
+                        // 默认列属性
+                        defaultColDef: {
+                            flex: 0,
+                            minWidth: 100,
+                            filter: true,
+                            sortable: true,
+                            resizable: true,
+                        },
+
+                        // 事件监听
+                        onGridReady: (params) => {
+                            this.gridApi = params.api;
+                            this.recordCount = INITIAL_DATA.length;
+                            params.api.sizeColumnsToFit();
+                        },
+                        onCellValueChanged: (params) => {
+                            this.handleSave(params);
+                        }
+                    };
+
+                    // 创建表格
+                    agGrid.createGrid(gridDiv, gridOptions);
+                },
+
+                // 核心：字段类型映射工厂
+                mapFieldToColumn(field) {
+                    const col = {
+                        field: field.name,
+                        headerName: field.label,
+                        width: field.width || 150,
+                        editable: true
+                    };
+
+                    if (field.pinned) col.pinned = field.pinned;
+
+                    switch (field.type) {
+                        case 'select':
+                            col.cellRenderer = badgeRenderer;
+                            col.cellEditor = 'agSelectCellEditor';
+                            col.cellEditorParams = {
+                                values: field.options.map(o => o.value)
+                            };
+                            // 实际项目中这里可以使用 formatValue 来显示 label
+                            break;
+
+                        case 'lookup':
+                            col.cellRenderer = userRenderer;
+                            col.cellEditor = 'agSelectCellEditor';
+                            col.cellEditorParams = {
+                                values: Object.keys(MOCK_USERS)
+                            };
+                            break;
+
+                        case 'date':
+                            col.cellEditor = DateEditor;
+                            break;
+                        
+                        case 'boolean':
+                            col.cellRenderer = params => `
+                                <div class="flex items-center h-full">
+                                    <input type="checkbox" ${params.value ? 'checked' : ''} class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300">
+                                </div>
+                            `;
+                            // 简单的点击处理（因为 checkbox 在 renderer 里面通常不触发 editor）
+                            col.onCellClicked = (params) => {
+                                params.node.setDataValue(field.name, !params.value);
+                            };
+                            col.editable = false; // 禁用常规编辑，使用点击切换
+                            break;
+                            
+                        case 'percent':
+                            col.valueFormatter = p => p.value ? p.value + '%' : '';
+                            col.cellEditor = 'agNumberCellEditor';
+                            break;
+                    }
+                    return col;
+                },
+
+                // 业务逻辑：保存数据
+                handleSave(params) {
+                    const { data, colDef, newValue, oldValue } = params;
+                    if (newValue === oldValue) return;
+
+                    console.log(`[模拟保存] ID: ${data._id}, Field: ${colDef.field}, Value: ${newValue}`);
+                    
+                    // 模拟未保存状态
+                    this.unsavedChanges++;
+                    
+                    // 模拟 API 延迟后保存成功
+                    setTimeout(() => {
+                        this.unsavedChanges--;
+                    }, 1000);
+                },
+
+                // 业务逻辑：新建行
+                addNewRow() {
+                    const newRow = { _id: Date.now().toString(), name: "新任务...", status: 'todo' };
+                    this.gridApi.applyTransaction({ add: [newRow] });
+                    this.recordCount++;
+                },
+
+                // 业务逻辑：快速搜索
+                onQuickFilter(value) {
+                    if(this.gridApi) {
+                        this.gridApi.setGridOption('quickFilterText', value);
+                    }
+                }
+            }));
+        });
+    </script>
+</body>
+</html>

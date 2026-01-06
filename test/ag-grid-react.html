@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Steedos Airtable View (AG Grid UMD)</title>
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@31.0.0/styles/ag-grid.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@31.0.0/styles/ag-theme-alpine.css" />
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@31.0.0/dist/ag-grid-community.min.js"></script>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        /* 深度定制 AG Grid 样式以接近 Airtable */
+        .ag-theme-alpine {
+            --ag-header-height: 40px;
+            --ag-row-height: 40px;
+            --ag-borders: solid 1px #e2e8f0;
+            --ag-row-border-color: #e2e8f0;
+            --ag-header-background-color: #f8fafc;
+            --ag-odd-row-background-color: #ffffff;
+            --ag-font-size: 13px;
+            --ag-font-family: 'Inter', system-ui, sans-serif;
+        }
+        
+        .ag-header-cell-label {
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        /* 选中单元格的边框颜色 */
+        .ag-theme-alpine .ag-ltr .ag-cell-focus:not(.ag-cell-range-selected) {
+            border-color: #3b82f6; 
+            border-width: 2px !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 h-screen w-screen overflow-hidden flex flex-col">
+
+    <div id="root" class="h-full flex flex-col"></div>
+
+    <script>
+        const { useState, useEffect, useRef, useMemo } = React;
+
+        // ==========================================
+        // 1. 数据模拟 (Steedos Metadata & Data)
+        // ==========================================
+        
+        // 模拟用户表 (用于 Lookup 字段)
+        const USERS_MAP = {
+            "u001": { name: "王建国", avatar: "https://i.pravatar.cc/150?u=1" },
+            "u002": { name: "陈思思", avatar: "https://i.pravatar.cc/150?u=2" },
+            "u003": { name: "张伟", avatar: "https://i.pravatar.cc/150?u=3" }
+        };
+
+        const steedosFields = [
+            { name: "name", label: "任务名称", type: "text", width: 220, pinned: 'left' },
+            { name: "status", label: "状态", type: "select", options: [
+                { label: "待处理", value: "todo", color: "bg-gray-200 text-gray-700" },
+                { label: "进行中", value: "doing", color: "bg-blue-100 text-blue-700" },
+                { label: "已完成", value: "done", color: "bg-green-100 text-green-700" },
+                { label: "阻塞", value: "blocked", color: "bg-red-100 text-red-700" }
+            ]},
+            { name: "owner", label: "负责人", type: "lookup", reference_to: "users" },
+            { name: "priority", label: "优先级", type: "number", icon: "📶" }, // 演示数字
+            { name: "due_date", label: "截止时间", type: "date" },
+            { name: "is_public", label: "公开", type: "boolean" },
+            { name: "budget", label: "预算", type: "currency" }
+        ];
+
+        const initialData = [
+            { id: 1, name: "华炎魔方表单设计器开发", status: "doing", owner: "u001", priority: 1, due_date: "2024-05-20", is_public: true, budget: 50000 },
+            { id: 2, name: "集成 AG Grid", status: "todo", owner: "u002", priority: 2, due_date: "2024-05-22", is_public: false, budget: 12000 },
+            { id: 3, name: "修复 Tailwind 样式冲突", status: "blocked", owner: "u001", priority: 3, due_date: "2024-05-15", is_public: true, budget: 0 },
+            { id: 4, name: "发布 v3.0 版本", status: "done", owner: "u003", priority: 1, due_date: "2024-04-01", is_public: true, budget: 100000 },
+        ];
+
+        // ==========================================
+        // 2. 自定义 Renderers (渲染器)
+        // ==========================================
+
+        // 状态标签渲染器
+        function statusCellRenderer(params) {
+            if (!params.value) return '';
+            // 找到对应的 option 配置
+            const field = steedosFields.find(f => f.name === params.colDef.field);
+            const option = field?.options?.find(o => o.value === params.value);
+            
+            if (option) {
+                return `<span class="px-2 py-0.5 rounded text-xs font-semibold ${option.color}">${option.label}</span>`;
+            }
+            return params.value;
+        }
+
+        // Lookup (人员) 渲染器
+        function userCellRenderer(params) {
+            const userId = params.value;
+            const user = USERS_MAP[userId];
+            if (!user) return '';
+            return `
+                <div class="flex items-center h-full">
+                    <img src="${user.avatar}" class="w-5 h-5 rounded-full mr-2 border border-gray-300">
+                    <span>${user.name}</span>
+                </div>
+            `;
+        }
+
+        // ==========================================
+        // 3. React 组件
+        // ==========================================
+        function App() {
+            const gridDiv = useRef(null); // Grid 容器
+            const gridApi = useRef(null); // Grid API 实例
+
+            // 将 Steedos 字段定义 转换为 AG Grid Column Defs
+            const columnDefs = useMemo(() => {
+                return steedosFields.map(field => {
+                    const col = {
+                        field: field.name,
+                        headerName: field.label,
+                        width: field.width || 150,
+                        editable: true,
+                        filter: true,
+                        sortable: true,
+                        resizable: true,
+                    };
+
+                    // --- 类型映射 ---
+                    switch(field.type) {
+                        case 'select':
+                            col.cellRenderer = statusCellRenderer;
+                            col.cellEditor = 'agSelectCellEditor';
+                            col.cellEditorParams = {
+                                values: field.options.map(o => o.value)
+                            };
+                            // 在编辑状态下，需要格式化显示 label 而不是 value (AG Grid 高级用法需 refData，这里简化处理)
+                            break;
+                        
+                        case 'lookup':
+                            col.cellRenderer = userCellRenderer;
+                            col.cellEditor = 'agSelectCellEditor';
+                            // 简单模拟下拉选择 ID
+                            col.cellEditorParams = {
+                                values: Object.keys(USERS_MAP)
+                            };
+                            // 编辑结束后，Formatter 负责把 ID 转为 Name 显示在非 HTML 模式下 (如果不用 cellRenderer)
+                            break;
+
+                        case 'date':
+                            col.filter = 'agDateColumnFilter';
+                            // AG Grid 默认没有日期选择器控件，通常需要自定义 DateComponent
+                            // 这里仅利用浏览器原生 type="date" 的简单 hack
+                            col.cellEditor = class DateEditor {
+                                init(params) {
+                                    this.eInput = document.createElement('input');
+                                    this.eInput.type = 'date';
+                                    this.eInput.value = params.value;
+                                    this.eInput.classList.add('w-full', 'h-full', 'px-2');
+                                }
+                                getGui() { return this.eInput; }
+                                getValue() { return this.eInput.value; }
+                            };
+                            break;
+
+                        case 'boolean':
+                            col.cellRenderer = params => {
+                                return `<input type="checkbox" ${params.value ? 'checked' : ''} disabled class="rounded text-blue-500" />`;
+                            };
+                            // 简单的点击切换
+                            col.onCellClicked = (params) => {
+                                params.node.setDataValue(field.name, !params.value);
+                            };
+                            col.editable = false; // 禁用默认编辑器，使用点击切换
+                            break;
+                            
+                        case 'currency':
+                            col.valueFormatter = params => '¥' + formatNumber(params.value);
+                            col.type = 'numericColumn'; // 右对齐
+                            break;
+                            
+                        case 'number':
+                            col.type = 'numericColumn';
+                            break;
+                    }
+
+                    return col;
+                });
+            }, []);
+
+            function formatNumber(number) {
+                return Math.floor(number).toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
+            }
+
+            // 初始化 Grid
+            useEffect(() => {
+                if (gridDiv.current) {
+                    const gridOptions = {
+                        columnDefs: columnDefs,
+                        rowData: initialData,
+                        rowSelection: 'multiple', // 允许行多选
+                        
+                        // 核心：Airtable 风格的编辑体验
+                        singleClickEdit: true, // 单击即编辑
+                        stopEditingWhenCellsLoseFocus: true, // 失去焦点自动保存
+                        
+                        // 动画与样式
+                        animateRows: true,
+                        headerHeight: 40,
+                        rowHeight: 42,
+
+                        // 默认列配置
+                        defaultColDef: {
+                            flex: 0, // 不自动撑满，允许横向滚动
+                            minWidth: 100,
+                            filter: true,
+                        },
+                        
+                        // 事件监听
+                        onCellValueChanged: (event) => {
+                            console.log('数据变更:', event.data);
+                            // TODO: 调用 Steedos API update
+                            // steedos.object(objName).update(id, { [field]: value })
+                        }
+                    };
+
+                    // 创建 Grid
+                    gridApi.current = agGrid.createGrid(gridDiv.current, gridOptions);
+                }
+
+                // 清理
+                return () => {
+                    // gridApi.current?.destroy(); // 新版API不需要手动 destroy
+                };
+            }, [columnDefs]);
+
+            const addNewRow = () => {
+                const newRow = { id: Date.now(), name: "新任务...", status: "todo", priority: 1 };
+                gridApi.current.applyTransaction({ add: [newRow] });
+            };
+
+            return React.createElement('div', { className: "h-full flex flex-col" }, [
+                // Toolbar
+                React.createElement('div', { className: "h-14 bg-white border-b border-gray-200 flex items-center px-4 justify-between" }, 
+                    React.createElement('div', { className: "flex items-center space-x-2"}, 
+                        React.createElement('div', { className: "bg-blue-500 text-white p-1.5 rounded"}, "☰"),
+                        React.createElement('h1', { className: "font-bold text-gray-700 text-lg"}, "项目视图 (All Tasks)")
+                    ),
+                    React.createElement('button', { 
+                        className: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded text-sm font-medium transition",
+                        onClick: addNewRow
+                    }, "+ 新建记录")
+                ),
+                // Grid Container
+                React.createElement('div', { 
+                    ref: gridDiv, 
+                    className: "flex-1 ag-theme-alpine w-full" 
+                })
+            ]);
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(React.createElement(App));
+    </script>
+</body>
+</html>

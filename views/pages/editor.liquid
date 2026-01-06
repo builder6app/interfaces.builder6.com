@@ -260,7 +260,7 @@
 
                 <!-- Preview View (Default) -->
                 <div id="previewWrapper" class="absolute inset-0 z-0 bg-white min-w-0">
-                    <iframe id="preview" class="w-full h-full border-none"></iframe>
+                    <iframe id="preview" name="preview" class="w-full h-full border-none"></iframe>
                 </div>
 
                 <!-- Expand Sidebar Button -->
@@ -509,27 +509,36 @@
 
             // 优先使用真实路由预览
             if (currentPageId && window.PROJECT_ID) {
-                // 使用专门的 preview 路由，避免渲染菜单等布局
+                // 使用 Form Post 方式刷新 iframe，确保 window context 重置，支持 const/let 重复运行
                 const targetUrl = `/site/${window.PROJECT_ID}/${currentPageId}/preview`;
                 
-                // 如果 src 还没设置，或者 URL 变了
-                if (previewFrame.getAttribute('data-src') !== targetUrl) {
-                    previewFrame.setAttribute('data-src', targetUrl);
-                    previewFrame.src = targetUrl;
+                let form = document.getElementById('previewForm');
+                if (!form) {
+                    form = document.createElement('form');
+                    form.id = 'previewForm';
+                    form.method = 'POST';
+                    form.style.display = 'none';
                     
-                    previewFrame.onload = () => {
-                        injectCodeIntoIframe(previewFrame, code);
-                    };
-                } else {
-                    // 已加载，尝试注入
-                    try {
-                        const doc = previewFrame.contentDocument || previewFrame.contentWindow.document;
-                        // 确保 document 可访问且已加载部分
-                        if (doc && doc.body) {
-                            injectCodeIntoIframe(previewFrame, code);
-                        }
-                    } catch(e) {}
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'code';
+                    form.appendChild(input);
+                    
+                    document.body.appendChild(form);
                 }
+                
+                // Debounce submit to avoid too many reloads
+                if (window.previewTimeout) clearTimeout(window.previewTimeout);
+                window.previewTimeout = setTimeout(() => {
+                    form.action = targetUrl;
+                    form.target = 'preview'; // Target iframe name or id
+                    // Ensure iframe has name attribute
+                    if (!previewFrame.name) previewFrame.name = 'preview';
+                    
+                    form.querySelector('input[name="code"]').value = code;
+                    form.submit();
+                }, 500); // 500ms delay
+                
                 return;
             }
             

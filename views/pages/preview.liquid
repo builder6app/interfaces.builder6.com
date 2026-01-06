@@ -1,3 +1,12 @@
+{% if page.code contains '<html' or page.code contains '<!DOCTYPE' %}
+
+<head>
+    {% render 'partials/head.liquid' %}
+    <title>{{ page.metaTitle | default: page.name | default: 'Preview' }}</title>
+</head>
+{{ page.code }}
+
+{% else %}
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -8,3 +17,4 @@
     {{ page.code }}
 </body>
 </html>
+{% endif %}

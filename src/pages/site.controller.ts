@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Res, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Param, Res, Body, NotFoundException, All } from '@nestjs/common';
 import { Response } from 'express';
 import { PageService } from './page.service';
 import { ProjectService } from '../projects/project.service';
@@ -25,15 +25,21 @@ export class SiteController {
     return project;
   }
 
-  @Get(':projectId/:pageId/preview')
+  @All(':projectId/:pageId/preview')
   async getPreview(
     @Param('projectId') projectId: string,
     @Param('pageId') pageId: string,
+    @Body() body: any,
     @Res() res: Response,
   ) {
     const page = await this.PageService.findOne(pageId);
     if (!page) {
       return res.status(404).send('Page not found');
+    }
+
+    // Support previewing unsaved code via POST
+    if (body && body.code) {
+      page.code = body.code;
     }
 
     // Optional: Verify project context if needed
