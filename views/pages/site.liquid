@@ -1,3 +1,44 @@
+{% if page.code contains '<html' or page.code contains '<!DOCTYPE' %}
+
+<head>
+    {% render 'partials/head.liquid' %}
+    <title>{{ page.metaTitle | default: page.name | default: 'Untitled Page' }}</title>
+</head>
+{{ page.code }}
+
+    {% if editUrl %}
+        <style>
+            .builder6-edit-btn {
+                position: fixed;
+                bottom: 1.5rem;
+                right: 1.5rem;
+                z-index: 9999;
+                background-color: #2563eb;
+                color: white;
+                padding: 0.5rem 1rem;
+                border-radius: 9999px;
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                font-weight: 500;
+                transition: all 0.2s;
+                text-decoration: none;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                opacity: 0.5;
+                font-family: system-ui, -apple-system, sans-serif;
+            }
+            .builder6-edit-btn:hover {
+                background-color: #3b82f6;
+                transform: scale(1.05);
+                opacity: 1;
+            }
+        </style>
+        <a href="{{ editUrl }}" class="builder6-edit-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+            Edit
+        </a>
+    {% endif %}
+{% else %}
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -139,3 +180,4 @@
 
 </body>
 </html>
+{% endif %}
