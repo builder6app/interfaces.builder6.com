@@ -47,6 +47,16 @@ export class AuthService implements OnModuleInit {
       },
       emailAndPassword: {
         enabled: true,
+        requireEmailVerification: true,
+      },
+      emailVerification: {
+        sendOnSignUp: true,
+        sendVerificationEmail: async (user, url, token) => {
+            console.log('----------------------------------------');
+            console.log(`📧 Send verification email to ${user.email}`);
+            console.log(`🔗 URL: ${url}`);
+            console.log('----------------------------------------');
+        }
       },
       socialProviders: {
         google: {

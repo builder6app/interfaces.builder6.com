@@ -60,6 +60,26 @@ export class ProjectController {
     return res.render('projects/show', { project, pages, objects, user: session.user });
   }
 
+  @Get(':id/settings')
+  async settings(@Req() req: Request, @Param('id') idOrSlug: string, @Res() res: Response) {
+    const session = await this.authService.auth.api.getSession({
+      headers: new Headers(req.headers as any),
+    });
+    if (!session) {
+      return res.redirect('/login');
+    }
+
+    const project = await this.projectService.resolve(idOrSlug);
+    if (!project) {
+        return res.redirect('/app');
+    }
+
+    // Need pages for the homepage selector
+    const pages = await this.PageService.findAllByProject(project._id!);
+
+    return res.render('projects/settings', { project, pages, user: session.user });
+  }
+
   @Get(':projectId/:pageId')
   async editPage(@Req() req: Request, @Param('projectId') projectIdOrSlug: string, @Param('pageId') pageId: string, @Res() res: Response) {
     const session = await this.authService.auth.api.getSession({

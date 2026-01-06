@@ -31,6 +31,8 @@ export class ProjectService {
       name,
       description,
       slug: projectSlug,
+      displayNavigation: true,
+      navigationStyle: 'left',
       owner: userId,
       created: now,
       created_by: userId,

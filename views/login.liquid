@@ -53,9 +53,6 @@
             <a href="/register" class="text-[#0A84FF] hover:text-[#409CFF] font-medium ml-1 transition-colors">Sign Up</a>
         </div>
         
-        <div class="mt-6 text-center">
-            <a href="/" class="text-xs text-gray-500 hover:text-gray-300 transition-colors">Back to Playground</a>
-        </div>
     </div>
 
     <script>
@@ -98,7 +95,27 @@
                     window.location.href = '/app';
                 } else {
                     const err = await res.json();
-                    alert(err.message || 'Authentication failed');
+                    if (err.message && err.message.includes('not verified')) {
+                        if(confirm('Email not verified. Do you want to resend the verification email?')){
+                             try {
+                                const resend = await fetch('/api/auth/send-verification-email', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ email })
+                                });
+                                if (resend.ok) {
+                                    alert('Verification email sent! Please check your inbox.');
+                                } else {
+                                    alert('Failed to send verification email.');
+                                }
+                             } catch(e) {
+                                console.error(e);
+                                alert('Error sending verification email');
+                             }
+                        }
+                    } else {
+                        alert(err.message || 'Authentication failed');
+                    }
                 }
             } catch (e) {
                 console.error(e);

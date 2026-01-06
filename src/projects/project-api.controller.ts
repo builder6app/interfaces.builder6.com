@@ -57,7 +57,8 @@ export class ProjectApiController {
           projectId: project._id!,
           name: 'Home',
           code: defaultCode,
-          slug: 'home'
+          slug: 'home',
+          addToNavigation: true
         }, session.user.id);
 
         if (homePage._id) {
