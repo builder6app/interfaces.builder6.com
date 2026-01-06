@@ -12,10 +12,20 @@
 <body class="flex flex-col h-screen bg-black text-white font-sans antialiased selection:bg-blue-500 selection:text-white overflow-hidden">
     {% render 'partials/notifications.liquid' %}
 
+    <textarea id="page-code-hidden" style="display:none">{{ page.code | escape }}</textarea>
     <script>
         window.PROJECT_ID = "{{ projectId }}";
         window.PROJECT_SLUG = "{{ project.slug }}";
-        window.PAGE = {{ page | json }};
+        // 手动构造 PAGE 对象，避免直接 dump json 导致 code 中的特殊字符破坏 script 标签
+        window.PAGE = {
+            _id: "{{ page._id }}",
+            name: "{{ page.name | escape }}",
+            projectId: "{{ page.projectId }}",
+            metaTitle: "{{ page.metaTitle | escape }}",
+            path: "{{ page.path | escape }}",
+            addToNavigation: {{ page.addToNavigation | default: false }}
+        };
+        window.PAGE.code = document.getElementById('page-code-hidden').value;
     </script>
     
     {% render 'partials/notifications.liquid' %}
@@ -496,9 +506,35 @@
         function updatePreview() {
             const code = editor.getValue();
             const previewFrame = document.getElementById('preview');
-            const doc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+
+            // 优先使用真实路由预览
+            if (currentPageId && window.PROJECT_ID) {
+                // 使用专门的 preview 路由，避免渲染菜单等布局
+                const targetUrl = `/site/${window.PROJECT_ID}/${currentPageId}/preview`;
+                
+                // 如果 src 还没设置，或者 URL 变了
+                if (previewFrame.getAttribute('data-src') !== targetUrl) {
+                    previewFrame.setAttribute('data-src', targetUrl);
+                    previewFrame.src = targetUrl;
+                    
+                    previewFrame.onload = () => {
+                        injectCodeIntoIframe(previewFrame, code);
+                    };
+                } else {
+                    // 已加载，尝试注入
+                    try {
+                        const doc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+                        // 确保 document 可访问且已加载部分
+                        if (doc && doc.body) {
+                            injectCodeIntoIframe(previewFrame, code);
+                        }
+                    } catch(e) {}
+                }
+                return;
+            }
             
-            // 构建完整的 HTML 页面，注入 Tailwind CDN
+            // Fallback for unsaved/new pages
+            const doc = previewFrame.contentDocument || previewFrame.contentWindow.document;
             const htmlContent = `
                 <!DOCTYPE html>
                 <html>
@@ -516,6 +552,38 @@
             doc.open();
             doc.write(htmlContent);
             doc.close();
+        }
+
+        function injectCodeIntoIframe(iframe, code) {
+            try {
+                const doc = iframe.contentDocument || iframe.contentWindow.document;
+                if (!doc) return;
+
+                // 移除 Edit 按钮（如果有的话）
+                const editBtns = doc.querySelectorAll('a[href*="/app/"]');
+                editBtns.forEach(btn => btn.style.display = 'none');
+
+                // 查找容器
+                const container = doc.body;
+                if (container) {
+                     replaceContentAndRunScripts(container, code);
+                }
+            } catch (e) {
+                console.warn('Preview injection failed:', e);
+            }
+        }
+
+        function replaceContentAndRunScripts(container, content) {
+            container.innerHTML = content;
+            const scripts = container.querySelectorAll('script');
+            scripts.forEach(oldScript => {
+                const newScript = document.createElement('script');
+                Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                if (oldScript.parentNode) {
+                    oldScript.parentNode.replaceChild(newScript, oldScript);
+                }
+            });
         }
 
         function updateSaveButtonState() {

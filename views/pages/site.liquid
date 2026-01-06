@@ -34,7 +34,7 @@
         <!-- Sidebar -->
         <aside id="appSidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-[#1c1c1e] border-r border-white/10 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col">
             <div class="p-6 flex items-center justify-between">
-                <a href="/app/{{ projectSlug }}" class="text-white font-bold text-xl tracking-tight truncate">{{ project.name }}</a>
+                <a href="/site/{{ projectSlug }}" class="text-white font-bold text-xl tracking-tight truncate">{{ project.name }}</a>
                 <!-- Mobile Close Button -->
                 <button id="mobileCloseBtn" class="md:hidden text-gray-400 hover:text-white p-1 rounded hover:bg-white/10 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -43,7 +43,7 @@
 
             <nav class="flex-1 overflow-y-auto px-4 pb-4 space-y-1 scrollbar-hide">
                 {% for p in navPages %}
-                    {% assign href = p._id | prepend: '/' | prepend: projectSlug | prepend: '/app/' %}
+                    {% assign href = p._id | prepend: '/' | prepend: projectSlug | prepend: '/site/' %}
                     
                     {% if p._id == page._id %}
                         <a href="{{ href }}" class="block px-4 py-2.5 rounded-lg text-sm font-medium transition-all shadow-lg shadow-blue-900/10" style="background-color: {{ themeColor }}; color: white;">{{ p.name }}</a>

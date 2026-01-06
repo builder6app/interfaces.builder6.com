@@ -25,6 +25,23 @@ export class SiteController {
     return project;
   }
 
+  @Get(':projectId/:pageId/preview')
+  async getPreview(
+    @Param('projectId') projectId: string,
+    @Param('pageId') pageId: string,
+    @Res() res: Response,
+  ) {
+    const page = await this.PageService.findOne(pageId);
+    if (!page) {
+      return res.status(404).send('Page not found');
+    }
+
+    // Optional: Verify project context if needed
+    // const project = await this.projectService.findOne(projectId);
+
+    return res.render('pages/preview', { page });
+  }
+
   @Get(':slug')
   async getHome(@Param('slug') slug: string, @Res() res: Response) {
     const project = await this.resolveProject(slug);

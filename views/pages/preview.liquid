@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    {% render 'partials/head.liquid' %}
+    <title>{{ page.metaTitle | default: page.name | default: 'Preview' }}</title>
+</head>
+<body class="bg-black min-h-screen text-white">
+    {{ page.code }}
+</body>
+</html>
